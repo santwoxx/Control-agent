@@ -506,6 +506,7 @@ export default function ControlPanel() {
   }
 
   return (
+    <>
     <div style={{ flex: 1, display: "flex", height: "100%", overflow: "hidden" }}>
       {/* Left: Control Toolbar (main area) */}
       <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -1561,6 +1562,7 @@ export default function ControlPanel() {
           onDismiss={stopListening}
         />
       )}
+    </>
   );
 }
 
