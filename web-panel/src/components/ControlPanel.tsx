@@ -340,16 +340,66 @@ export default function ControlPanel() {
     if (!automationPrompt.trim()) return;
     const trimmed = automationPrompt.trim();
 
-    // 1. WhatsApp Regex
-    // Suporta: "whatsapp [numero] [mensagem]" ou "enviar whatsapp para [numero] mensagem [mensagem]"
-    const whatsappMatch = trimmed.match(/^whatsapp\s+(\d+)\s+(.+)$/i);
-    const whatsappPtMatch = trimmed.match(/^enviar\s+whatsapp\s+para\s+(\d+)\s+mensagem\s+(.+)$/i);
-    const match = whatsappMatch || whatsappPtMatch;
+    // Helpers para extrair número e mensagem de fala natural
+    const cleanNumber = (raw: string) => raw.replace(/[\s\-\(\)\+]/g, "").replace(/^0+/, "");
+    const extractNumber = (text: string): string | null => {
+      // Pega o primeiro grupo de dígitos com 10+ caracteres (DDD + numero)
+      const nums = text.match(/(\d[\d\s\-\(\)]{8,}\d)/);
+      if (nums) return cleanNumber(nums[1]);
+      return null;
+    };
 
-    if (match) {
-      const number = match[1];
-      const message = match[2];
-      dispatch("AUTOMATION_WHATSAPP", { number, message });
+    // 1. WhatsApp — formatos naturais em português
+    // "você envia uma mensagem para o número X falando Y"
+    // "envia uma mensagem pra X dizendo Y"
+    // "manda um zap pro X falando Y"
+    // "enviar mensagem para X mensagem Y"
+    // "whatsapp X Y"
+    const whatsappDirect = trimmed.match(/^whatsapp\s+(.+?)\s+(.+)$/i);
+    const msgPatterns = [
+      /(?:envia|enviar|manda|mandar|envie)(?:\s*[-:]?\s*uma)?\s*(?:mensagem|whatsapp|zap|msg)\s*(?:para|pra|pro|ao)\s*(?:o\s+)?(?:número|num|número|phone)?\s*([\d\s\-\(\)]{10,})\s*(?:falando|dizendo|com\s+a\s+mensagem|com\s+o\s+texto|mensagem|texto|dizendo\s+o\s+seguinte|falando\s+o\s+seguinte)?\s*(.+)$/i,
+      /(?:envia|enviar|manda|mandar|envie)(?:\s*[-:]?\s*uma)?\s*(?:mensagem|whatsapp|zap|msg)\s*(?:para|pra|pro|ao)\s*(?:o\s+)?(?:número|num|número)?\s*([\d\s\-\(\)]{10,})\s*$/i,
+      /(?:falar\s+com|mandar\s+zap|dar\s+um\s+toque)\s+(?:no|na|para|pra)\s*(?:o\s+)?(?:número|num)?\s*([\d\s\-\(\)]{10,})\s*(?:falando|dizendo|dizer|mensagem)?\s*(.+)?$/i,
+    ];
+
+    let number: string | null = null;
+    let message: string | null = null;
+
+    // 1a. Tenta "whatsapp X Y"
+    if (whatsappDirect) {
+      number = cleanNumber(whatsappDirect[1]);
+      message = whatsappDirect[2];
+    }
+
+    // 1b. Tenta padrões de linguagem natural
+    if (!number) {
+      for (const pattern of msgPatterns) {
+        const m = trimmed.match(pattern);
+        if (m) {
+          number = cleanNumber(m[1]);
+          message = m[2]?.trim() || "";
+          break;
+        }
+      }
+    }
+
+    // 1c. Fallback: extrai qualquer número longo do texto e o resto é mensagem
+    if (!number) {
+      const extracted = extractNumber(trimmed);
+      if (extracted) {
+        number = extracted;
+        // Tudo antes do número é ruído, tudo depois é a mensagem
+        const numIdx = trimmed.search(/(\d[\d\s\-\(\)]{8,}\d)/);
+        if (numIdx >= 0) {
+          message = trimmed.slice(numIdx + (trimmed.slice(numIdx).match(/(\d[\d\s\-\(\)]{8,}\d)/)?.[0]?.length || 0)).trim();
+          // Remove palavras de ligação no início da mensagem
+          message = message.replace(/^(?:falando|dizendo|mensagem|texto|dizendo\s+o\s+seguinte|falando\s+o\s+seguinte)[\s,:]*/i, "").trim();
+        }
+      }
+    }
+
+    if (number && number.length >= 10) {
+      dispatch("AUTOMATION_WHATSAPP", { number, message: message || "(sem mensagem)" });
       setAutomationPrompt("");
       return;
     }
