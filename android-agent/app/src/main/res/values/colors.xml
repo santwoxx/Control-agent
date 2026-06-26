@@ -12,4 +12,5 @@
     <color name="ca_text">#e2e8f0</color>
     <color name="ca_text_muted">#64748b</color>
     <color name="ca_border">#2a2a3a</color>
+    <color name="ic_launcher_background">#14132c</color>
 </resources>

@@ -10,12 +10,17 @@ import android.view.accessibility.AccessibilityManager
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.result.contract.ActivityResultContracts
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.remotecontrol.agent.R
 import com.remotecontrol.agent.service.AgentService
+import com.remotecontrol.agent.service.Preferences
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,34 +30,63 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var dotServer: View
     private lateinit var txtServer: TextView
+    private lateinit var txtServerUrl: TextView
     private lateinit var dotAccessibility: View
     private lateinit var txtAccessibility: TextView
     private lateinit var dotNotification: View
     private lateinit var txtNotification: TextView
     private lateinit var txtDeviceModel: TextView
     private lateinit var txtDeviceOS: TextView
+    private lateinit var btnScanQr: Button
     private lateinit var btnAccessibility: Button
     private lateinit var btnNotification: Button
     private lateinit var btnStop: Button
+
+    private val scanLauncher = registerForActivityResult(ScanContract()) { result ->
+        if (result.contents != null) {
+            val scannedUrl = result.contents.trim()
+            if (scannedUrl.startsWith("ws://") || scannedUrl.startsWith("wss://")) {
+                Preferences.serverUrl = scannedUrl
+                txtServerUrl.text = scannedUrl
+                restartService()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        Preferences.init(this)
+
         dotServer = findViewById(R.id.dotServer)
         txtServer = findViewById(R.id.txtServer)
+        txtServerUrl = findViewById(R.id.txtServerUrl)
         dotAccessibility = findViewById(R.id.dotAccessibility)
         txtAccessibility = findViewById(R.id.txtAccessibility)
         dotNotification = findViewById(R.id.dotNotification)
         txtNotification = findViewById(R.id.txtNotification)
         txtDeviceModel = findViewById(R.id.txtDeviceModel)
         txtDeviceOS = findViewById(R.id.txtDeviceOS)
+        btnScanQr = findViewById(R.id.btnScanQr)
         btnAccessibility = findViewById(R.id.btnAccessibility)
         btnNotification = findViewById(R.id.btnNotification)
         btnStop = findViewById(R.id.btnStop)
 
         txtDeviceModel.text = "${Build.MANUFACTURER} ${Build.MODEL}"
         txtDeviceOS.text = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
+
+        val savedUrl = Preferences.serverUrl
+        txtServerUrl.text = if (savedUrl.isNotBlank()) savedUrl else "Não configurado"
+
+        btnScanQr.setOnClickListener {
+            val options = ScanOptions()
+            options.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+            options.setPrompt("Escaneie o QR Code do Painel de Controle")
+            options.setBeepEnabled(false)
+            options.setOrientationLocked(true)
+            scanLauncher.launch(options)
+        }
 
         btnAccessibility.setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
@@ -74,6 +108,12 @@ class MainActivity : AppCompatActivity() {
         checkContactsPermission()
     }
 
+    private fun restartService() {
+        stopService(Intent(this, AgentService::class.java))
+        val serviceIntent = Intent(this, AgentService::class.java)
+        ContextCompat.startForegroundService(this, serviceIntent)
+    }
+
     private fun checkContactsPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), REQUEST_CONTACTS_PERMISSION)
@@ -89,12 +129,12 @@ class MainActivity : AppCompatActivity() {
         val accessibilityEnabled = isAccessibilityEnabled()
 
         if (accessibilityEnabled) {
-            dotAccessibility.setBackgroundColor(0xFF10b981.toInt())
+            dotAccessibility.backgroundTintList = ColorStateList.valueOf(0xFF10b981.toInt())
             txtAccessibility.text = "Ativada"
             btnAccessibility.text = "✓ Acessibilidade Ativa"
             btnAccessibility.isEnabled = false
         } else {
-            dotAccessibility.setBackgroundColor(0xFFef4444.toInt())
+            dotAccessibility.backgroundTintList = ColorStateList.valueOf(0xFFef4444.toInt())
             txtAccessibility.text = "Desativada"
             btnAccessibility.text = "Ativar Acessibilidade"
             btnAccessibility.isEnabled = true
@@ -102,12 +142,12 @@ class MainActivity : AppCompatActivity() {
 
         val notificationEnabled = isNotificationServiceEnabled()
         if (notificationEnabled) {
-            dotNotification.setBackgroundColor(0xFF10b981.toInt())
+            dotNotification.backgroundTintList = ColorStateList.valueOf(0xFF10b981.toInt())
             txtNotification.text = "Ativado"
             btnNotification.text = "✓ Notificações Ativas"
             btnNotification.isEnabled = false
         } else {
-            dotNotification.setBackgroundColor(0xFFef4444.toInt())
+            dotNotification.backgroundTintList = ColorStateList.valueOf(0xFFef4444.toInt())
             txtNotification.text = "Desativado"
             btnNotification.text = "Ativar Acesso Notificações"
             btnNotification.isEnabled = true
@@ -115,10 +155,10 @@ class MainActivity : AppCompatActivity() {
 
         val isConnected = AgentService.isConnected
         if (isConnected) {
-            dotServer.setBackgroundColor(0xFF10b981.toInt())
+            dotServer.backgroundTintList = ColorStateList.valueOf(0xFF10b981.toInt())
             txtServer.text = "Conectado"
         } else {
-            dotServer.setBackgroundColor(0xFFef4444.toInt())
+            dotServer.backgroundTintList = ColorStateList.valueOf(0xFFef4444.toInt())
             txtServer.text = "Desconectado"
         }
     }

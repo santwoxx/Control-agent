@@ -1,6 +1,7 @@
 "use client";
 
 import { useSocket } from "@/context/SocketContext";
+import QrConnect from "./QrConnect";
 
 export default function DeviceSidebar() {
   const { devices, selectedDevice, setSelectedDevice, isConnected } = useSocket();
@@ -66,6 +67,9 @@ export default function DeviceSidebar() {
           ))
         )}
       </div>
+
+      {/* QR Code Connect */}
+      <QrConnect />
 
       {/* Footer */}
       <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)", fontSize: 11, color: "var(--text-muted)" }}>

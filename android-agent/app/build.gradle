@@ -65,6 +65,9 @@ dependencies {
     // ViewModel / Lifecycle
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-service:2.7.0'
+
+    // QR Code scanning
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
 }
 
 kapt {

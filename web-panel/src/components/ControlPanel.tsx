@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSocket } from "@/context/SocketContext";
+import QrConnect from "./QrConnect";
 
 interface Btn { icon: string; label: string; command: string; payload?: any; }
 
@@ -1334,6 +1335,11 @@ export default function ControlPanel() {
             <span style={{ color: "var(--text-muted)", fontSize: 11 }}>×</span>
             <input type="number" value={deviceHeight} onChange={(e) => setDeviceHeight(Number(e.target.value))} style={{ width: 60, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 4, padding: "4px 6px", color: "var(--text)", fontSize: 11 }} />
           </div>
+        </div>
+
+        {/* QR Code */}
+        <div style={{ borderTop: "1px solid var(--border)" }}>
+          <QrConnect />
         </div>
 
         {/* Command Log */}

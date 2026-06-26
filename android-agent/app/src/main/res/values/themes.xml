@@ -1,8 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.RemoteControlAgent" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="Theme.RemoteControlAgent" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#7c3aed</item>
+        <item name="colorOnPrimary">#ffffff</item>
+        <item name="colorSecondary">#06b6d4</item>
+        <item name="colorOnSecondary">#000000</item>
         <item name="android:statusBarColor">#0a0a0f</item>
         <item name="android:navigationBarColor">#0a0a0f</item>
         <item name="android:windowBackground">#0a0a0f</item>
+        <item name="materialCardViewStyle">@style/CustomCardView</item>
+    </style>
+
+    <style name="CustomCardView" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">#13131a</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="strokeColor">#2a2a3a</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <style name="Widget.Custom.Button.Primary" parent="Widget.Material3.Button">
+        <item name="backgroundTint">#7c3aed</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textColor">#ffffff</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:fontWeight">700</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="Widget.Custom.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="cornerRadius">12dp</item>
+        <item name="strokeColor">#2a2a3a</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:fontWeight">600</item>
+        <item name="android:letterSpacing">0</item>
     </style>
 </resources>
