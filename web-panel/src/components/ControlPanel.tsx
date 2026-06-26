@@ -17,7 +17,16 @@ export default function ControlPanel() {
 
   // J.A.R.V.I.S. Voice Interface
   const [isListening, setIsListening] = useState<"prompt" | "reply" | null>(null);
+  const [jarvisTranscript, setJarvisTranscript] = useState("");
   const recognitionRef = useRef<any>(null);
+  const transcriptTimeoutRef = useRef<any>(null);
+
+  const stopListening = useCallback(() => {
+    try { recognitionRef.current?.stop(); } catch {}
+    setIsListening(null);
+    setJarvisTranscript("");
+    if (transcriptTimeoutRef.current) clearTimeout(transcriptTimeoutRef.current);
+  }, []);
 
   const startVoiceInput = useCallback((target: "prompt" | "reply") => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -26,28 +35,50 @@ export default function ControlPanel() {
       return;
     }
     if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(null);
+      stopListening();
       return;
     }
     const recognition = new SpeechRecognition();
     recognition.lang = "pt-BR";
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      if (target === "prompt") {
-        setAutomationPrompt((prev) => prev + (prev ? " " : "") + transcript);
-      } else {
-        setManualReplyText((prev) => prev + (prev ? " " : "") + transcript);
+      let finalTranscript = "";
+      let interimTranscript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += t;
+        } else {
+          interimTranscript += t;
+        }
+      }
+      setJarvisTranscript(interimTranscript || finalTranscript);
+      if (finalTranscript) {
+        if (transcriptTimeoutRef.current) clearTimeout(transcriptTimeoutRef.current);
+        if (target === "prompt") {
+          setAutomationPrompt((prev) => prev + (prev ? " " : "") + finalTranscript);
+        } else {
+          setManualReplyText((prev) => prev + (prev ? " " : "") + finalTranscript);
+        }
+        transcriptTimeoutRef.current = setTimeout(() => setIsListening(null), 800);
       }
     };
-    recognition.onerror = () => setIsListening(null);
-    recognition.onend = () => setIsListening(null);
+    recognition.onerror = (e: any) => {
+      if (e.error === "no-speech" || e.error === "aborted") return;
+      stopListening();
+    };
+    recognition.onend = () => {
+      if (isListening) setIsListening(null);
+      setJarvisTranscript("");
+    };
     recognition.start();
     recognitionRef.current = recognition;
     setIsListening(target);
-  }, [isListening]);
+    setJarvisTranscript("🎤 Ouvindo...");
+  }, [isListening, stopListening]);
 
   // Screen interaction state
   const screenRef = useRef<HTMLDivElement>(null);
@@ -1471,6 +1502,116 @@ export default function ControlPanel() {
           </div>
         </div>
       </div>
+    </div>
+
+      {isListening && (
+        <JarvisOverlay
+          target={isListening}
+          transcript={jarvisTranscript}
+          onDismiss={stopListening}
+        />
+      )}
+  );
+}
+
+/* J.A.R.V.I.S. Fullscreen Overlay */
+function JarvisOverlay({
+  target,
+  transcript,
+  onDismiss,
+}: {
+  target: "prompt" | "reply";
+  transcript: string;
+  onDismiss: () => void;
+}) {
+  return (
+    <div
+      onClick={onDismiss}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "rgba(10,10,15,0.92)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 24,
+        cursor: "pointer",
+        animation: "fadeIn 0.3s ease",
+        backdropFilter: "blur(4px)",
+      }}
+    >
+      {/* JARVIS Logo / Name */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+        <div style={{
+          width: 80, height: 80,
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, rgba(124,58,237,0.3), rgba(6,182,212,0.1))",
+          border: "2px solid rgba(124,58,237,0.6)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 32, fontWeight: "bold",
+          color: "#7c3aed",
+          animation: "jarvisPulse 2s ease-in-out infinite",
+          boxShadow: "0 0 60px rgba(124,58,237,0.3)",
+        }}>
+          J
+        </div>
+      </div>
+
+      {/* Pulsing Rings */}
+      <div style={{ position: "relative", width: 200, height: 200, margin: "-40px 0" }}>
+        <div style={{ position: "absolute", top: "50%", left: "50%", width: "100%", height: "100%", borderRadius: "50%", border: "2px solid rgba(124,58,237,0.4)", animation: "jarvisRing 2.5s ease-out infinite", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "50%", left: "50%", width: "100%", height: "100%", borderRadius: "50%", border: "2px solid rgba(124,58,237,0.3)", animation: "jarvisRing 2.5s ease-out infinite 0.8s", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "50%", left: "50%", width: "100%", height: "100%", borderRadius: "50%", border: "2px solid rgba(124,58,237,0.2)", animation: "jarvisRing 2.5s ease-out infinite 1.6s", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
+      </div>
+
+      {/* J.A.R.V.I.S. Title */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+        <span style={{
+          fontSize: 28,
+          fontWeight: 800,
+          background: "linear-gradient(135deg, #7c3aed, #06b6d4)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          letterSpacing: "0.15em",
+        }}>
+          J.A.R.V.I.S.
+        </span>
+        <span style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          fontSize: 13,
+          color: "#94a3b8",
+          letterSpacing: "0.05em",
+        }}>
+          <span className="jarvis-dot" />
+          {target === "prompt" ? "COMANDO DE VOZ" : "RESPOSTA DE VOZ"}
+        </span>
+      </div>
+
+      {/* Live Transcript */}
+      <div style={{
+        maxWidth: 480,
+        padding: "16px 24px",
+        borderRadius: 12,
+        background: "rgba(124,58,237,0.08)",
+        border: "1px solid rgba(124,58,237,0.2)",
+        fontSize: 18,
+        color: "#e2e8f0",
+        textAlign: "center",
+        minHeight: 24,
+        minWidth: 200,
+        lineHeight: 1.5,
+      }}>
+        {transcript || "🎤 Aguardando..."}
+      </div>
+
+      {/* Hint */}
+      <span style={{ fontSize: 11, color: "#475569", marginTop: 8 }}>
+        Clique em qualquer lugar para cancelar
+      </span>
     </div>
   );
 }
