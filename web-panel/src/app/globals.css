@@ -151,6 +151,56 @@ html, body {
   75% { content: '...'; }
 }
 
+/* J.A.R.V.I.S. Voice Interface */
+@keyframes jarvisPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(124,58,237,0.3), 0 0 20px rgba(124,58,237,0.1); }
+  50% { box-shadow: 0 0 16px rgba(124,58,237,0.6), 0 0 40px rgba(124,58,237,0.25), 0 0 60px rgba(124,58,237,0.1); }
+}
+@keyframes jarvisRing {
+  0% { transform: translate(-50%,-50%) scale(0.8); opacity: 0.6; }
+  50% { transform: translate(-50%,-50%) scale(1.4); opacity: 0.3; }
+  100% { transform: translate(-50%,-50%) scale(2.2); opacity: 0; }
+}
+@keyframes jarvisRingDelay {
+  0% { transform: translate(-50%,-50%) scale(0.8); opacity: 0.6; }
+  50% { transform: translate(-50%,-50%) scale(1.4); opacity: 0.3; }
+  100% { transform: translate(-50%,-50%) scale(2.2); opacity: 0; }
+}
+@keyframes jarvisBreathing {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.jarvis-active {
+  animation: jarvisPulse 2s ease-in-out infinite;
+  border-color: rgba(124,58,237,0.6) !important;
+  position: relative;
+  background: rgba(124,58,237,0.05) !important;
+}
+.jarvis-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  border: 2px solid rgba(124,58,237,0.5);
+  animation: jarvisRing 2s ease-out infinite;
+  pointer-events: none;
+}
+.jarvis-ring-delay {
+  animation: jarvisRingDelay 2s ease-out infinite;
+  animation-delay: 1s;
+}
+.jarvis-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7c3aed;
+  animation: jarvisBreathing 1.5s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(124,58,237,0.8);
+}
+
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }

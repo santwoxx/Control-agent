@@ -15,14 +15,14 @@ export default function ControlPanel() {
   const [deviceWidth, setDeviceWidth] = useState(1080);
   const [deviceHeight, setDeviceHeight] = useState(2400);
 
-  // Voice input state
+  // J.A.R.V.I.S. Voice Interface
   const [isListening, setIsListening] = useState<"prompt" | "reply" | null>(null);
   const recognitionRef = useRef<any>(null);
 
   const startVoiceInput = useCallback((target: "prompt" | "reply") => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Seu navegador não suporta entrada de voz. Use Chrome ou Edge.");
+      alert("J.A.R.V.I.S. não está disponível neste navegador. Use Chrome ou Edge.");
       return;
     }
     if (isListening) {
@@ -586,32 +586,58 @@ export default function ControlPanel() {
               </div>
             </section>
 
-            {/* Prompt de Automação */}
+            {/* J.A.R.V.I.S. Prompt de Automação */}
             <section className="glass-card" style={{ padding: 14 }}>
-              <span style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10, display: "block", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                Prompt de Automação Rápida (Sem IA)
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <span style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  J.A.R.V.I.S. — Automação por Voz
+                </span>
+                {isListening === "prompt" && (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 10, color: "#7c3aed", fontWeight: 600 }}>
+                    <span className="jarvis-dot" />
+                    Ouvindo...
+                  </span>
+                )}
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <div style={{ display: "flex", gap: 6 }}>
-                  <input
-                    value={automationPrompt}
-                    onChange={(e) => setAutomationPrompt(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleAutomation(); }}
-                    placeholder="whatsapp 5511999999999 Olá, mensagem rápida!"
-                    style={{ flex: 1, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 12px", color: "var(--text)", fontSize: 13 }}
-                  />
+                  <div style={{ flex: 1, position: "relative" }}>
+                    <input
+                      value={automationPrompt}
+                      onChange={(e) => setAutomationPrompt(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleAutomation(); }}
+                      placeholder="whatsapp 5511999999999 Olá, mensagem rápida!"
+                      className={isListening === "prompt" ? "jarvis-active" : ""}
+                      style={{
+                        width: "100%",
+                        background: "var(--surface-2)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 8,
+                        padding: "8px 12px",
+                        color: "var(--text)",
+                        fontSize: 13,
+                        outline: "none",
+                        transition: "all 0.3s",
+                      }}
+                    />
+                    {isListening === "prompt" && (
+                      <>
+                        <div className="jarvis-ring" />
+                        <div className="jarvis-ring jarvis-ring-delay" />
+                      </>
+                    )}
+                  </div>
                   <button
-                    className="ctrl-btn"
+                    className={`ctrl-btn ${isListening === "prompt" ? "jarvis-active" : ""}`}
                     onClick={() => startVoiceInput("prompt")}
                     style={{
                       padding: "8px 12px",
-                      background: isListening === "prompt" ? "rgba(239,68,68,0.2)" : "var(--surface-2)",
-                      borderColor: isListening === "prompt" ? "var(--danger)" : "var(--border)",
                       fontSize: 16,
+                      position: "relative",
                     }}
-                    title={isListening === "prompt" ? "Ouvindo..." : "Entrada de Voz"}
+                    title={isListening === "prompt" ? "J.A.R.V.I.S. está ouvindo..." : "J.A.R.V.I.S. — Comando de Voz"}
                   >
-                    {isListening === "prompt" ? "🔴" : "🎤"}
+                    {isListening === "prompt" ? "🎤" : "🎤"}
                   </button>
                   <button
                     className="ctrl-btn"
@@ -837,25 +863,43 @@ export default function ControlPanel() {
 
                       {/* Reply field */}
                       <div style={{ display: "flex", gap: 6, paddingTop: 6, borderTop: "1px solid var(--border)" }}>
-                        <input
-                          value={manualReplyText}
-                          onChange={(e) => setManualReplyText(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === "Enter") sendManualReply(); }}
-                          placeholder={`Responder para ${selectedChatContact.name} via ${selectedChatContact.app}...`}
-                          style={{ flex: 1, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 12px", color: "var(--text)", fontSize: 12 }}
-                        />
+                        <div style={{ flex: 1, position: "relative" }}>
+                          <input
+                            value={manualReplyText}
+                            onChange={(e) => setManualReplyText(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") sendManualReply(); }}
+                            placeholder={`Responder para ${selectedChatContact.name} via ${selectedChatContact.app}...`}
+                            className={isListening === "reply" ? "jarvis-active" : ""}
+                            style={{
+                              width: "100%",
+                              background: "var(--surface-2)",
+                              border: "1px solid var(--border)",
+                              borderRadius: 8,
+                              padding: "8px 12px",
+                              color: "var(--text)",
+                              fontSize: 12,
+                              outline: "none",
+                              transition: "all 0.3s",
+                            }}
+                          />
+                          {isListening === "reply" && (
+                            <>
+                              <div className="jarvis-ring" />
+                              <div className="jarvis-ring jarvis-ring-delay" />
+                            </>
+                          )}
+                        </div>
                         <button
-                          className="ctrl-btn"
+                          className={`ctrl-btn ${isListening === "reply" ? "jarvis-active" : ""}`}
                           onClick={() => startVoiceInput("reply")}
                           style={{
                             padding: "8px 10px",
-                            background: isListening === "reply" ? "rgba(239,68,68,0.2)" : "var(--surface-2)",
-                            borderColor: isListening === "reply" ? "var(--danger)" : "var(--border)",
                             fontSize: 16,
+                            position: "relative",
                           }}
-                          title={isListening === "reply" ? "Ouvindo..." : "Entrada de Voz"}
+                          title={isListening === "reply" ? "J.A.R.V.I.S. está ouvindo..." : "J.A.R.V.I.S. — Comando de Voz"}
                         >
-                          {isListening === "reply" ? "🔴" : "🎤"}
+                          🎤
                         </button>
                         <button
                           className="ctrl-btn"
