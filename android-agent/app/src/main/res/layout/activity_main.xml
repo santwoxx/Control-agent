@@ -16,19 +16,16 @@
             android:background="@drawable/bg_header_gradient"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingTop="40dp" android:paddingLeft="32dp" android:paddingRight="32dp" android:paddingBottom="32dp">
+            android:paddingTop="48dp"
+            android:paddingLeft="32dp"
+            android:paddingRight="32dp"
+            android:paddingBottom="28dp">
 
-            <TextView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:gravity="center"
-                android:text="CT"
-                android:textSize="22dp"
-                android:textColor="#ffffff"
-                android:textStyle="bold"
-                android:background="@drawable/bg_icon"
-                android:backgroundTint="#2d1b69"
-                android:letterSpacing="0.05" />
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_logo"
+                android:contentDescription="Logo" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -37,7 +34,7 @@
                 android:textSize="26dp"
                 android:textColor="#ffffff"
                 android:textStyle="bold"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="14dp"
                 android:letterSpacing="-0.02" />
 
             <TextView
@@ -54,7 +51,7 @@
                 android:text="Controle remoto de dispositivos Android"
                 android:textSize="12dp"
                 android:textColor="#94a3b8"
-                android:layout_marginTop="8dp" />
+                android:layout_marginTop="6dp" />
 
         </LinearLayout>
 
@@ -69,12 +66,14 @@
             <!-- Card: Server Status -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:clickable="false">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -83,39 +82,46 @@
                         android:orientation="horizontal">
 
                         <TextView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
                             android:gravity="center"
                             android:text="⚡"
-                            android:textSize="16dp"
+                            android:textSize="17dp"
                             android:background="@drawable/bg_icon"
                             android:backgroundTint="#2d1b69" />
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginStart="12dp"
-                            android:text="Servidor"
-                            android:textSize="14dp"
-                            android:textColor="#e2e8f0"
-                            android:textStyle="bold" />
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Servidor"
+                                android:textSize="14dp"
+                                android:textColor="#e2e8f0"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/txtServer"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Desconectado"
+                                android:textSize="12dp"
+                                android:textColor="#64748b"
+                                android:layout_marginTop="1dp" />
+
+                        </LinearLayout>
 
                         <View
                             android:id="@+id/dotServer"
                             android:layout_width="10dp"
                             android:layout_height="10dp"
                             android:background="@drawable/bg_dot"
-                            android:backgroundTint="#ef4444"
-                            android:layout_marginEnd="8dp" />
-
-                        <TextView
-                            android:id="@+id/txtServer"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Desconectado"
-                            android:textSize="12dp"
-                            android:textColor="#64748b" />
+                            android:backgroundTint="#ef4444" />
 
                     </LinearLayout>
 
@@ -127,7 +133,7 @@
                         android:textSize="11dp"
                         android:textColor="#64748b"
                         android:layout_marginTop="12dp"
-                        android:layout_marginStart="48dp"
+                        android:layout_marginStart="50dp"
                         android:fontFamily="monospace" />
 
                 </LinearLayout>
@@ -138,48 +144,64 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp">
+                android:layout_marginTop="12dp"
+                android:clickable="false">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:gravity="center"
-                        android:text="♿"
-                        android:textSize="16dp"
-                        android:background="@drawable/bg_icon"
-                        android:backgroundTint="#1a2e1b" />
-
-                    <TextView
-                        android:layout_width="0dp"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="12dp"
-                        android:text="Acessibilidade"
-                        android:textSize="14dp"
-                        android:textColor="#e2e8f0"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <View
-                        android:id="@+id/dotAccessibility"
-                        android:layout_width="10dp"
-                        android:layout_height="10dp"
-                        android:background="@drawable/bg_dot"
-                        android:backgroundTint="#ef4444"
-                        android:layout_marginEnd="8dp" />
+                        <TextView
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:gravity="center"
+                            android:text="♿"
+                            android:textSize="17dp"
+                            android:background="@drawable/bg_icon"
+                            android:backgroundTint="#1a2e1b" />
 
-                    <TextView
-                        android:id="@+id/txtAccessibility"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Desativada"
-                        android:textSize="12dp"
-                        android:textColor="#64748b" />
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Acessibilidade"
+                                android:textSize="14dp"
+                                android:textColor="#e2e8f0"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/txtAccessibility"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Desativada"
+                                android:textSize="12dp"
+                                android:textColor="#64748b"
+                                android:layout_marginTop="1dp" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:id="@+id/dotAccessibility"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:background="@drawable/bg_dot"
+                            android:backgroundTint="#ef4444" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
@@ -189,48 +211,64 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp">
+                android:layout_marginTop="12dp"
+                android:clickable="false">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:gravity="center"
-                        android:text="🔔"
-                        android:textSize="16dp"
-                        android:background="@drawable/bg_icon"
-                        android:backgroundTint="#1b2e2a" />
-
-                    <TextView
-                        android:layout_width="0dp"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="12dp"
-                        android:text="Notificações"
-                        android:textSize="14dp"
-                        android:textColor="#e2e8f0"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <View
-                        android:id="@+id/dotNotification"
-                        android:layout_width="10dp"
-                        android:layout_height="10dp"
-                        android:background="@drawable/bg_dot"
-                        android:backgroundTint="#ef4444"
-                        android:layout_marginEnd="8dp" />
+                        <TextView
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:gravity="center"
+                            android:text="🔔"
+                            android:textSize="17dp"
+                            android:background="@drawable/bg_icon"
+                            android:backgroundTint="#1b2e2a" />
 
-                    <TextView
-                        android:id="@+id/txtNotification"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Desativado"
-                        android:textSize="12dp"
-                        android:textColor="#64748b" />
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Notificações"
+                                android:textSize="14dp"
+                                android:textColor="#e2e8f0"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/txtNotification"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Desativado"
+                                android:textSize="12dp"
+                                android:textColor="#64748b"
+                                android:layout_marginTop="1dp" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:id="@+id/dotNotification"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:background="@drawable/bg_dot"
+                            android:backgroundTint="#ef4444" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
@@ -240,12 +278,14 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp">
+                android:layout_marginTop="12dp"
+                android:clickable="false">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -254,44 +294,51 @@
                         android:orientation="horizontal">
 
                         <TextView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
                             android:gravity="center"
                             android:text="📱"
-                            android:textSize="16dp"
+                            android:textSize="17dp"
                             android:background="@drawable/bg_icon"
                             android:backgroundTint="#2d1b69" />
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginStart="12dp"
-                            android:text="Dispositivo"
-                            android:textSize="14dp"
-                            android:textColor="#e2e8f0"
-                            android:textStyle="bold" />
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Dispositivo"
+                                android:textSize="14dp"
+                                android:textColor="#e2e8f0"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/txtDeviceModel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="..."
+                                android:textSize="13dp"
+                                android:textColor="#94a3b8"
+                                android:layout_marginTop="1dp" />
+
+                        </LinearLayout>
 
                     </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/txtDeviceModel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="..."
-                        android:textSize="14dp"
-                        android:textColor="#e2e8f0"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginStart="48dp" />
 
                     <TextView
                         android:id="@+id/txtDeviceOS"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="12dp"
+                        android:textSize="11dp"
                         android:textColor="#64748b"
-                        android:layout_marginStart="48dp"
-                        android:layout_marginTop="2dp" />
+                        android:layout_marginTop="8dp"
+                        android:layout_marginStart="50dp"
+                        android:fontFamily="monospace" />
 
                 </LinearLayout>
 

@@ -127,39 +127,47 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateStatus() {
         val accessibilityEnabled = isAccessibilityEnabled()
+        val successColor = ColorStateList.valueOf(0xFF10b981.toInt())
+        val dangerColor = ColorStateList.valueOf(0xFFef4444.toInt())
 
         if (accessibilityEnabled) {
-            dotAccessibility.backgroundTintList = ColorStateList.valueOf(0xFF10b981.toInt())
+            dotAccessibility.backgroundTintList = successColor
             txtAccessibility.text = "Ativada"
+            txtAccessibility.setTextColor(0xFF10b981.toInt())
             btnAccessibility.text = "✓ Acessibilidade Ativa"
             btnAccessibility.isEnabled = false
         } else {
-            dotAccessibility.backgroundTintList = ColorStateList.valueOf(0xFFef4444.toInt())
+            dotAccessibility.backgroundTintList = dangerColor
             txtAccessibility.text = "Desativada"
+            txtAccessibility.setTextColor(0xFF64748b.toInt())
             btnAccessibility.text = "Ativar Acessibilidade"
             btnAccessibility.isEnabled = true
         }
 
         val notificationEnabled = isNotificationServiceEnabled()
         if (notificationEnabled) {
-            dotNotification.backgroundTintList = ColorStateList.valueOf(0xFF10b981.toInt())
+            dotNotification.backgroundTintList = successColor
             txtNotification.text = "Ativado"
+            txtNotification.setTextColor(0xFF10b981.toInt())
             btnNotification.text = "✓ Notificações Ativas"
             btnNotification.isEnabled = false
         } else {
-            dotNotification.backgroundTintList = ColorStateList.valueOf(0xFFef4444.toInt())
+            dotNotification.backgroundTintList = dangerColor
             txtNotification.text = "Desativado"
+            txtNotification.setTextColor(0xFF64748b.toInt())
             btnNotification.text = "Ativar Acesso Notificações"
             btnNotification.isEnabled = true
         }
 
         val isConnected = AgentService.isConnected
         if (isConnected) {
-            dotServer.backgroundTintList = ColorStateList.valueOf(0xFF10b981.toInt())
+            dotServer.backgroundTintList = successColor
             txtServer.text = "Conectado"
+            txtServer.setTextColor(0xFF10b981.toInt())
         } else {
-            dotServer.backgroundTintList = ColorStateList.valueOf(0xFFef4444.toInt())
+            dotServer.backgroundTintList = dangerColor
             txtServer.text = "Desconectado"
+            txtServer.setTextColor(0xFFef4444.toInt())
         }
     }
 

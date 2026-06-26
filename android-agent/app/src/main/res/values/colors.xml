@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Control Agent Brand Colors -->
     <color name="ca_black">#0a0a0f</color>
     <color name="ca_surface">#13131a</color>
     <color name="ca_surface2">#1c1c26</color>
@@ -9,8 +8,10 @@
     <color name="ca_cyan">#06b6d4</color>
     <color name="ca_success">#10b981</color>
     <color name="ca_danger">#ef4444</color>
+    <color name="ca_warning">#f59e0b</color>
     <color name="ca_text">#e2e8f0</color>
     <color name="ca_text_muted">#64748b</color>
+    <color name="ca_text_dim">#475569</color>
     <color name="ca_border">#2a2a3a</color>
     <color name="ic_launcher_background">#14132c</color>
 </resources>
