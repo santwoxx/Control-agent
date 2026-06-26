@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import LoginPage from "@/components/LoginPage";
 
@@ -39,11 +40,10 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             border: "1px solid rgba(124,58,237,0.4)",
             borderRadius: 20,
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 32,
             animation: "logoPulse 1.5s ease-in-out infinite",
             boxShadow: "0 0 30px rgba(124,58,237,0.2)",
           }}>
-            ⚡
+            <Image src="/logo.png" alt="Control Agent" width={44} height={44} style={{ borderRadius: 12, objectFit: "cover" }} />
           </div>
           <p className="gradient-text" style={{ fontWeight: 700, fontSize: 18 }}>
             Control Agent
