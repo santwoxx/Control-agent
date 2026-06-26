@@ -205,6 +205,201 @@ html, body {
   box-shadow: 0 0 8px rgba(124,58,237,0.8);
 }
 
+/* J.A.R.V.I.S. Card — ControlPanel */
+.jarvis-card {
+  padding: 18px;
+  border-color: rgba(124,58,237,0.25);
+  background: linear-gradient(135deg, rgba(19,19,26,0.9), rgba(19,19,26,0.7));
+  position: relative;
+  overflow: hidden;
+}
+.jarvis-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.4), rgba(124,58,237,0.05), rgba(6,182,212,0.2));
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+.jarvis-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.jarvis-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(6,182,212,0.1));
+  border: 1.5px solid rgba(124,58,237,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: jarvisPulse 3s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(124,58,237,0.2);
+}
+.jarvis-logo-inner {
+  font-size: 14px;
+  font-weight: 800;
+  color: #7c3aed;
+  line-height: 1;
+}
+.jarvis-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.jarvis-title {
+  font-size: 14px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #7c3aed, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+}
+.jarvis-subtitle {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.jarvis-listening-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  font-size: 10px;
+  color: #7c3aed;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  animation: fadeIn 0.3s ease;
+}
+.jarvis-input-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 0;
+}
+.jarvis-input-wrap {
+  flex: 1;
+  position: relative;
+}
+.jarvis-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+.jarvis-input:focus {
+  border-color: rgba(124,58,237,0.6);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+}
+.jarvis-active-input {
+  border-color: rgba(124,58,237,0.6) !important;
+  background: rgba(124,58,237,0.05) !important;
+  animation: jarvisPulse 2s ease-in-out infinite;
+}
+.jarvis-mic-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.25s;
+  position: relative;
+  flex-shrink: 0;
+}
+.jarvis-mic-btn:hover {
+  border-color: rgba(124,58,237,0.5);
+  background: rgba(124,58,237,0.12);
+}
+.jarvis-mic-btn.is-listening {
+  border-color: #7c3aed;
+  background: rgba(124,58,237,0.2);
+  animation: jarvisPulse 2s ease-in-out infinite;
+}
+.jarvis-mic-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 10px;
+  border: 2px solid rgba(124,58,237,0.5);
+  animation: jarvisRing 2s ease-out infinite;
+  pointer-events: none;
+}
+.jarvis-exec-btn {
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(6,182,212,0.4);
+  background: rgba(6,182,212,0.15);
+  color: #06b6d4;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+}
+.jarvis-exec-btn:hover {
+  background: rgba(6,182,212,0.25);
+  border-color: rgba(6,182,212,0.7);
+  box-shadow: 0 0 20px rgba(6,182,212,0.15);
+}
+.jarvis-examples {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.jarvis-examples-title {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+.jarvis-examples-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.jarvis-example-item {
+  font-size: 11px;
+  color: #64748b;
+  font-style: italic;
+  padding-left: 8px;
+  border-left: 2px solid rgba(124,58,237,0.3);
+  line-height: 1.5;
+  transition: color 0.2s;
+  cursor: pointer;
+}
+.jarvis-example-item:hover {
+  color: #94a3b8;
+  border-left-color: rgba(124,58,237,0.6);
+}
+.jarvis-example-item::before {
+  content: "💬 ";
+  opacity: 0.6;
+}
+
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }

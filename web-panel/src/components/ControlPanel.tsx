@@ -342,29 +342,70 @@ export default function ControlPanel() {
 
     const cleanNumber = (raw: string) => raw.replace(/[\s\-\(\)\+]/g, "").replace(/^0+/, "");
 
-    // Detecta se é intenção de WhatsApp
-    const isWhatsAppIntent = /(?:enviar|envia|manda|mandar|envie|whatsapp|zap|mensagem\s*para|falar\s+com)/i.test(trimmed);
+    const removeFillers = (s: string) =>
+      s
+        .replace(/^(?:t[áa](?:\s+bem|\s+bom|\s+tudo|\s+joinha)?|n[ée]|tipo|assim|da[ií]?|a[ií]?|ent[ãa]o?|bom|bem|ó|ah|eh|ih|oh|uh|entendeu|sabe|viu|olha|veja|cara|mano|meu)\s+/i, "")
+        .replace(/\s+(?:t[áa](?:\s+bem|\s+bom|\s+tudo)?|n[ée]|tipo|assim|da[ií]?|a[ií]?|ent[ãa]o?|bom|bem|sabe|viu|entendeu|cara|mano)\s*$/i, "")
+        .trim();
 
-    if (isWhatsAppIntent) {
-      // Extrai QUALQUER número com 8+ dígitos de qualquer lugar do texto
+    const removeCmdPrefix = (s: string) => {
+      let r = s
+        .replace(/(?:o\s+)?n[uú]mero\s+(?:dele|dela|dele\s+[ée]|dela\s+[ée]|d[oae]?\s+contato|d[oae]?\s+zap|d[oae]?\s+whatsapp|telefone|phone|celular|do\s+whatsapp|do\s+zap|do\s+contato)[\s:]*/gi, "")
+        .replace(/^(?:voc[êe]\s+)?(?:pode|podes|poderia|poderiam)\s+(?:me\s+)?/i, "")
+        .replace(/^(?:gostaria\s+de\s+)?(?:preciso\s+(?:de\s+)?)?(?:quero|quer[eo]?|queria|queríamos)\s+(?:que\s+(?:voc[êe]\s+)?)?/i, "")
+        .replace(/^(?:vou|vai|vamos|vão)\s+/i, "")
+        .replace(/^(?:mandei|mandou|mandamos|mandaram|manda|mande|mandar)\s+/i, "")
+        .replace(/^(?:enviar|enviei|enviou|enviamos|enviaram|envia|envie)\s+/i, "")
+        .replace(/^(?:essa|esta|uma|a)\s+(?:mensagem|whatsapp|zap|msg)\s+(?:para|pra|pro|ao|no|na)\s+(?:\w+\s+)*/i, "")
+        .replace(/^(?:mensagem|whatsapp|zap|msg)\s+(?:para|pra|pro|ao|no|na)\s+(?:\w+\s+)*/i, "")
+        .replace(/^(?:para|pra|pro|ao|no|na)\s+(?:\w+\s+)*?/i, "")
+        .replace(/^(?:falando|dizendo|com\s+a\s+mensagem|dizendo\s+o\s+seguinte|falando\s+o\s+seguinte|dizer|diz|diga|seguinte|com\s+o\s+texto|texto|mensagem)[\s,:]*/i, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      return r;
+    };
+
+    // Detecta intenção de WhatsApp com concordância verbal
+    // Cobre: enviar, envia, envie, enviei, enviou, mandar, manda, mande, mandei, mandou,
+    //        vou enviar, quero mandar, pode enviar, gostaria de enviar, preciso mandar,
+    //        whatsapp, zap, mensagem pra, msg pra, falar com, manda zap
+    const whatsappIntentVerbs = /(?:(?:envi|mand)(?:[aeiou]|[aeiou]r|[aeiou]m|[aei]ei?|ar|ou|amos|aram|ei)|whatsapp|zap|msg\s+para|mensagem\s+(?:para|pra|pro)|fal(?:ar|a|o|ei|e)\s+com|mandei|mandou)/i;
+    const hasMsgKeyword = /(?:mensagem|whatsapp|zap|msg|n[uú]mero|telefone|celular|contato|fal(?:ar|a|o|e)\s+com)/i;
+    const hasLongNumber = /(\d[\d\s\-\(\)]{7,}\d)/.test(trimmed);
+
+    const isWhatsApp = whatsappIntentVerbs.test(trimmed) || (hasLongNumber && hasMsgKeyword.test(trimmed));
+
+    if (isWhatsApp) {
       const allNumbers = trimmed.match(/(\d[\d\s\-\(\)]{7,}\d)/g);
       if (allNumbers) {
         const number = cleanNumber(allNumbers[0]);
         if (number.length >= 8) {
-          // Mensagem = texto original sem o número e sem palavras de comando
           let message = trimmed
-            .replace(/(\d[\d\s\-\(\)]{7,}\d)/, "")
-            .replace(/^(?:você\s+)?(?:pode\s+)?(?:me\s+)?(?:envia|enviar|manda|mandar|envie|mande)(?:\s*[-:]?\s*uma)?\s*(?:mensagem|whatsapp|zap|msg)\s*(?:para|pra|pro|ao|no|na)\s*(?:\w+\s+)*/i, "")
-            .replace(/(?:o\s+)?n[uú]mero\s+(?:dele|dela|dele\s+é|é|do\s+contato|do\s+zap|do\s+whatsapp|telefone)[\s:]*/i, "")
-            .replace(/^(?:falando|dizendo|com\s+a\s+mensagem|dizendo\s+o\s+seguinte|falando\s+o\s+seguinte|dizer|mensagem|texto)[\s,:]*/i, "")
-            .replace(/\s+/g, " ")
+            .replace(/(\d[\d\s\-\(\)]{7,}\d)/g, "")
             .trim();
 
-          // Se não sobrou nada ou só palavras de ligação, usa o que estava antes do número
+          message = removeCmdPrefix(message);
+          message = removeFillers(message);
+          message = removeCmdPrefix(message);
+
+          // Se vazio ou muito curto, tenta texto ANTES do número
           if (!message || message.length < 3) {
             const numIdx = trimmed.search(/(\d[\d\s\-\(\)]{7,}\d)/);
             if (numIdx > 0) {
               message = trimmed.slice(0, numIdx).trim();
+              message = removeCmdPrefix(message);
+              message = removeFillers(message);
+            }
+          }
+
+          // Se ainda vazio, tenta texto DEPOIS do número
+          if (!message || message.length < 3) {
+            const numMatch = trimmed.match(/(\d[\d\s\-\(\)]{7,}\d)/);
+            if (numMatch) {
+              const idx = trimmed.indexOf(numMatch[0]);
+              message = trimmed.slice(idx + numMatch[0].length).trim();
+              message = message.replace(/^(?:falando|dizendo|mensagem|texto|com\s+a\s+mensagem|dizer|diga|diz)[\s,:]*/i, "").trim();
+              message = removeFillers(message);
             }
           }
 
@@ -375,22 +416,21 @@ export default function ControlPanel() {
       }
     }
 
-    // 2. Open URL Regex
-    // Suporta: "site [url]" ou "abrir site [url]"
+    // 2. Open URL
     const urlMatch = trimmed.match(/^(?:abrir\s+)?site\s+(https?:\/\/\S+)$/i);
     if (urlMatch) {
-      const url = urlMatch[1];
-      dispatch("OPEN_URL", { url });
+      dispatch("OPEN_URL", { url: urlMatch[1] });
       setAutomationPrompt("");
       return;
     }
 
-    // 3. Tenta extrair número mesmo sem palavras-chave (fallback geral)
+    // 3. Fallback geral: qualquer número longo no texto
     const fallbackNums = trimmed.match(/(\d[\d\s\-\(\)]{7,}\d)/);
     if (fallbackNums) {
       const number = cleanNumber(fallbackNums[0]);
       if (number.length >= 8) {
         let message = trimmed.replace(/(\d[\d\s\-\(\)]{7,}\d)/, "").replace(/\s+/g, " ").trim();
+        message = removeFillers(message);
         if (!message || message.length < 3) {
           const numIdx = trimmed.search(/(\d[\d\s\-\(\)]{7,}\d)/);
           if (numIdx > 0) message = trimmed.slice(0, numIdx).trim();
@@ -401,7 +441,6 @@ export default function ControlPanel() {
       }
     }
 
-    // Erro no log
     setLog((prev) => [
       `[${new Date().toLocaleTimeString()}] ✗ Comando não reconhecido. Use: 'whatsapp [numero] [mensagem]' ou 'site [url]'`,
       ...prev
@@ -655,70 +694,60 @@ export default function ControlPanel() {
               </div>
             </section>
 
-            {/* J.A.R.V.I.S. Prompt de Automação */}
-            <section className="glass-card" style={{ padding: 14 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <span style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  J.A.R.V.I.S. — Automação por Voz
-                </span>
+            {/* J.A.R.V.I.S. — Automação por Voz */}
+            <section className="jarvis-card glass-card">
+              <div className="jarvis-card-header">
+                <div className="jarvis-logo">
+                  <div className="jarvis-logo-inner">J</div>
+                </div>
+                <div className="jarvis-title-group">
+                  <span className="jarvis-title">J.A.R.V.I.S.</span>
+                  <span className="jarvis-subtitle">Automação por Voz</span>
+                </div>
                 {isListening === "prompt" && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 10, color: "#7c3aed", fontWeight: 600 }}>
+                  <span className="jarvis-listening-badge">
                     <span className="jarvis-dot" />
                     Ouvindo...
                   </span>
                 )}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <div style={{ flex: 1, position: "relative" }}>
-                    <input
-                      value={automationPrompt}
-                      onChange={(e) => setAutomationPrompt(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleAutomation(); }}
-                      placeholder="whatsapp 5511999999999 Olá, mensagem rápida!"
-                      className={isListening === "prompt" ? "jarvis-active" : ""}
-                      style={{
-                        width: "100%",
-                        background: "var(--surface-2)",
-                        border: "1px solid var(--border)",
-                        borderRadius: 8,
-                        padding: "8px 12px",
-                        color: "var(--text)",
-                        fontSize: 13,
-                        outline: "none",
-                        transition: "all 0.3s",
-                      }}
-                    />
-                    {isListening === "prompt" && (
-                      <>
-                        <div className="jarvis-ring" />
-                        <div className="jarvis-ring jarvis-ring-delay" />
-                      </>
-                    )}
-                  </div>
-                  <button
-                    className={`ctrl-btn ${isListening === "prompt" ? "jarvis-active" : ""}`}
-                    onClick={() => startVoiceInput("prompt")}
-                    style={{
-                      padding: "8px 12px",
-                      fontSize: 16,
-                      position: "relative",
-                    }}
-                    title={isListening === "prompt" ? "J.A.R.V.I.S. está ouvindo..." : "J.A.R.V.I.S. — Comando de Voz"}
-                  >
-                    {isListening === "prompt" ? "🎤" : "🎤"}
-                  </button>
-                  <button
-                    className="ctrl-btn"
-                    style={{ padding: "8px 14px", background: "rgba(6,182,212,0.2)", borderColor: "var(--accent)" }}
-                    onClick={handleAutomation}
-                  >
-                    ⚡ Executar
-                  </button>
+
+              <div className="jarvis-input-row">
+                <div className="jarvis-input-wrap">
+                  <input
+                    value={automationPrompt}
+                    onChange={(e) => setAutomationPrompt(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleAutomation(); }}
+                    placeholder="ex: manda um zap pro 5511999999999 dizendo olá"
+                    className={isListening === "prompt" ? "jarvis-input jarvis-active-input" : "jarvis-input"}
+                  />
+                  {isListening === "prompt" && (
+                    <>
+                      <div className="jarvis-ring" />
+                      <div className="jarvis-ring jarvis-ring-delay" />
+                    </>
+                  )}
                 </div>
-                <span style={{ fontSize: 10, color: "var(--text-muted)", opacity: 0.8 }}>
-                  💡 Comandos: <strong>whatsapp [numero] [mensagem]</strong> ou <strong>site [url]</strong>
-                </span>
+                <button
+                  className={`jarvis-mic-btn ${isListening === "prompt" ? "is-listening" : ""}`}
+                  onClick={() => startVoiceInput("prompt")}
+                  title={isListening === "prompt" ? "J.A.R.V.I.S. está ouvindo..." : "J.A.R.V.I.S. — Comando de Voz"}
+                >
+                  {isListening === "prompt" ? "🎤" : "🎤"}
+                  {isListening === "prompt" && <span className="jarvis-mic-ring" />}
+                </button>
+                <button className="jarvis-exec-btn" onClick={handleAutomation}>
+                  ⚡ Executar
+                </button>
+              </div>
+
+              <div className="jarvis-examples">
+                <span className="jarvis-examples-title">📌 Exemplos de voz</span>
+                <div className="jarvis-examples-list">
+                  <span className="jarvis-example-item">"envie zap pra 5511999999999 falando olá, tudo bem?"</span>
+                  <span className="jarvis-example-item">"manda mensagem pro 557399428872 quero marcar um horário"</span>
+                  <span className="jarvis-example-item">"abrir site https://google.com"</span>
+                </div>
               </div>
             </section>
 
