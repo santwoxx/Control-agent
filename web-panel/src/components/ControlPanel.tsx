@@ -15,6 +15,40 @@ export default function ControlPanel() {
   const [deviceWidth, setDeviceWidth] = useState(1080);
   const [deviceHeight, setDeviceHeight] = useState(2400);
 
+  // Voice input state
+  const [isListening, setIsListening] = useState<"prompt" | "reply" | null>(null);
+  const recognitionRef = useRef<any>(null);
+
+  const startVoiceInput = useCallback((target: "prompt" | "reply") => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Seu navegador não suporta entrada de voz. Use Chrome ou Edge.");
+      return;
+    }
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(null);
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "pt-BR";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      if (target === "prompt") {
+        setAutomationPrompt((prev) => prev + (prev ? " " : "") + transcript);
+      } else {
+        setManualReplyText((prev) => prev + (prev ? " " : "") + transcript);
+      }
+    };
+    recognition.onerror = () => setIsListening(null);
+    recognition.onend = () => setIsListening(null);
+    recognition.start();
+    recognitionRef.current = recognition;
+    setIsListening(target);
+  }, [isListening]);
+
   // Screen interaction state
   const screenRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -568,6 +602,19 @@ export default function ControlPanel() {
                   />
                   <button
                     className="ctrl-btn"
+                    onClick={() => startVoiceInput("prompt")}
+                    style={{
+                      padding: "8px 12px",
+                      background: isListening === "prompt" ? "rgba(239,68,68,0.2)" : "var(--surface-2)",
+                      borderColor: isListening === "prompt" ? "var(--danger)" : "var(--border)",
+                      fontSize: 16,
+                    }}
+                    title={isListening === "prompt" ? "Ouvindo..." : "Entrada de Voz"}
+                  >
+                    {isListening === "prompt" ? "🔴" : "🎤"}
+                  </button>
+                  <button
+                    className="ctrl-btn"
                     style={{ padding: "8px 14px", background: "rgba(6,182,212,0.2)", borderColor: "var(--accent)" }}
                     onClick={handleAutomation}
                   >
@@ -797,6 +844,19 @@ export default function ControlPanel() {
                           placeholder={`Responder para ${selectedChatContact.name} via ${selectedChatContact.app}...`}
                           style={{ flex: 1, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 12px", color: "var(--text)", fontSize: 12 }}
                         />
+                        <button
+                          className="ctrl-btn"
+                          onClick={() => startVoiceInput("reply")}
+                          style={{
+                            padding: "8px 10px",
+                            background: isListening === "reply" ? "rgba(239,68,68,0.2)" : "var(--surface-2)",
+                            borderColor: isListening === "reply" ? "var(--danger)" : "var(--border)",
+                            fontSize: 16,
+                          }}
+                          title={isListening === "reply" ? "Ouvindo..." : "Entrada de Voz"}
+                        >
+                          {isListening === "reply" ? "🔴" : "🎤"}
+                        </button>
                         <button
                           className="ctrl-btn"
                           style={{ padding: "8px 12px", background: "rgba(124,58,237,0.2)", borderColor: "var(--accent)", flexDirection: "row", gap: 4 }}
