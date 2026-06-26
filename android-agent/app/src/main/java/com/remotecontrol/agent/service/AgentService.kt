@@ -280,20 +280,28 @@ class AgentService : Service() {
                         startActivity(intent)
                         Log.i(TAG, "Automation WhatsApp: Intent launched for $number")
 
-                        // Espera 2.2 segundos para o WhatsApp carregar a conversa e clica no enviar
-                        handler.postDelayed({
-                            val accessibility = RemoteAccessibilityService.instance
-                            if (accessibility != null) {
-                                val success = accessibility.clickWhatsAppSendButton()
-                                if (success) {
-                                    sendCommandResult("AUTOMATION_WHATSAPP", "success")
+                        // Tenta clicar no enviar com retry: espera 3.5s, depois 1s, depois 1s
+                        fun tryClickSend(delay: Long, attempt: Int) {
+                            handler.postDelayed({
+                                val accessibility = RemoteAccessibilityService.instance
+                                if (accessibility != null) {
+                                    val success = accessibility.clickWhatsAppSendButton()
+                                    if (success) {
+                                        Log.i(TAG, "Automation WhatsApp: send clicked on attempt $attempt")
+                                        sendCommandResult("AUTOMATION_WHATSAPP", "success")
+                                    } else if (attempt < 3) {
+                                        Log.w(TAG, "Automation WhatsApp: send not found, retry $attempt")
+                                        tryClickSend(1000, attempt + 1)
+                                    } else {
+                                        Log.w(TAG, "Automation WhatsApp: send button not found after 3 attempts")
+                                        sendCommandResult("AUTOMATION_WHATSAPP", "send_button_not_found")
+                                    }
                                 } else {
-                                    sendCommandResult("AUTOMATION_WHATSAPP", "send_button_not_found")
+                                    sendCommandResult("AUTOMATION_WHATSAPP", "accessibility_not_running")
                                 }
-                            } else {
-                                sendCommandResult("AUTOMATION_WHATSAPP", "accessibility_not_running")
-                            }
-                        }, 2200)
+                            }, delay)
+                        }
+                        tryClickSend(3500, 1)
                     } catch (e: Exception) {
                         Log.e(TAG, "Error executing AUTOMATION_WHATSAPP: ${e.message}")
                         sendCommandResult("AUTOMATION_WHATSAPP", "error_${e.message}")

@@ -335,18 +335,30 @@ class RemoteAccessibilityService : AccessibilityService() {
     fun clickWhatsAppSendButton(): Boolean {
         val rootNode = rootInActiveWindow ?: return false
 
-        // 1. Tenta pelo ID do recurso (independe do idioma!)
-        val nodesById = rootNode.findAccessibilityNodeInfosByViewId("com.whatsapp:id/send")
-        val businessNodesById = rootNode.findAccessibilityNodeInfosByViewId("com.whatsapp.w4b:id/send")
-        val sendNode = when {
-            nodesById != null && nodesById.isNotEmpty() -> nodesById[0]
-            businessNodesById != null && businessNodesById.isNotEmpty() -> businessNodesById[0]
-            else -> null
-        }
-        if (sendNode != null && sendNode.isClickable) {
-            sendNode.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
-            Log.i(TAG, "Clicked WhatsApp send button by Resource ID")
-            return true
+        // 1. Tenta pelos IDs de recurso conhecidos
+        val sendIds = listOf(
+            "com.whatsapp:id/send",
+            "com.whatsapp:id/fab",
+            "com.whatsapp.w4b:id/send",
+            "com.whatsapp.w4b:id/fab"
+        )
+        for (id in sendIds) {
+            val nodes = rootNode.findAccessibilityNodeInfosByViewId(id)
+            if (nodes != null && nodes.isNotEmpty()) {
+                val node = nodes[0]
+                if (node.isClickable) {
+                    node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
+                    Log.i(TAG, "Clicked WhatsApp send button by Resource ID: $id")
+                    return true
+                }
+                // Tenta clicar no pai se o filho não for clicável
+                val parent = node.parent
+                if (parent != null && parent.isClickable) {
+                    parent.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
+                    Log.i(TAG, "Clicked WhatsApp send button parent by Resource ID: $id")
+                    return true
+                }
+            }
         }
 
         // 2. Tenta pela descrição de conteúdo (Fallbacks Português/Inglês)
@@ -369,6 +381,33 @@ class RemoteAccessibilityService : AccessibilityService() {
             if (foundNode.isClickable) {
                 foundNode.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
                 Log.i(TAG, "Clicked WhatsApp send button by Content Description")
+                return true
+            }
+        }
+
+        // 3. Fallback: procura ImageButton com ícone de enviar no rodapé da conversa
+        fun findSendByClass(node: android.view.accessibility.AccessibilityNodeInfo?): android.view.accessibility.AccessibilityNodeInfo? {
+            if (node == null) return null
+            val cname = node.className?.toString() ?: ""
+            if (cname.contains("ImageButton") || cname.contains("ImageView")) {
+                val desc = node.contentDescription?.toString() ?: ""
+                if (desc.contains("Enviar", ignoreCase = true) || desc.contains("Send", ignoreCase = true)) {
+                    return node
+                }
+            }
+            for (i in 0 until node.childCount) {
+                val child = node.getChild(i)
+                val found = findSendByClass(child)
+                if (found != null) return found
+            }
+            return null
+        }
+
+        val imgNode = findSendByClass(rootNode)
+        if (imgNode != null) {
+            if (imgNode.isClickable) {
+                imgNode.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
+                Log.i(TAG, "Clicked WhatsApp send button by ImageButton class")
                 return true
             }
         }
