@@ -383,6 +383,9 @@ export default function ControlPanel() {
         <div style={{ fontSize: 64 }}>📡</div>
         <p style={{ color: "var(--text-muted)", fontSize: 16 }}>Nenhum dispositivo selecionado</p>
         <p style={{ color: "var(--text-muted)", fontSize: 13 }}>Conecte o app Android e selecione um dispositivo na barra lateral</p>
+        <div style={{ width: 300, marginTop: 8 }}>
+          <QrConnect />
+        </div>
       </div>
     );
   }
