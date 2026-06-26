@@ -183,6 +183,150 @@ const autoReplyRules: AutoReplyRule[] = [
   { id: '3', keyword: 'suporte', response: 'Para falar com o suporte, acesse: https://suporte.exemplo.com' }
 ];
 
+// ─── Atendimento Humanizado ──────────────────────────────────────────────────
+interface HumanizedCategory {
+  id: string;
+  name: string;
+  keywords: string[];
+  responses: string[];
+}
+
+let humanizedEnabled = false;
+let humanizedDelayMin = 3000;
+let humanizedDelayMax = 7000;
+
+const defaultHumanizedCategories: HumanizedCategory[] = [
+  {
+    id: 'cat-greeting',
+    name: 'Saudação / Boas-vindas',
+    keywords: ['ola', 'oie', 'bom dia', 'boa tarde', 'boa noite', 'tudo bem', 'olá', 'oi', 'eai', 'e aí', 'hey', 'fala'],
+    responses: [
+      'Olá! Tudo bem por aqui? Como posso te ajudar hoje?',
+      'Oi! Tudo certo? Em que posso ser útil?',
+      'Olá! Prazer em falar com você. Me conta, qual a sua dúvida?',
+      'Oie! Como você está? Pode ficar à vontade para perguntar.',
+    ],
+  },
+  {
+    id: 'cat-pricing',
+    name: 'Preços / Orçamento',
+    keywords: ['preço', 'preco', 'quanto custa', 'valor', 'orçamento', 'orcamento', 'investimento', 'quanto é', 'precisa', 'tabela', 'mensalidade', 'plano', 'assinatura'],
+    responses: [
+      'Vamos lá! Nossos valores começam em R$ 49,90 para o plano básico. O plano completo sai por R$ 89,90 por mês. Qual deles você acha que se encaixa melhor no que precisa?',
+      'Claro! O plano básico é R$ 49,90/mês e o completo R$ 89,90/mês. Os dois têm funcionalidades bem interessantes — quer que eu detalhe as diferenças?',
+      'Fico feliz que você perguntou! Trabalhamos com duas opções: a partir de R$ 49,90/mês. Se quiser, posso te explicar direitinho o que cada uma inclui.',
+    ],
+  },
+  {
+    id: 'cat-hours',
+    name: 'Horários / Localização',
+    keywords: ['horário', 'horario', 'funciona', 'aberto', 'abre', 'fecha', 'endereço', 'endereco', 'local', 'onde fica', 'atendimento', 'funcionamento'],
+    responses: [
+      'Nosso atendimento funciona de segunda a sexta, das 8h às 18h, e aos sábados das 8h ao meio-dia. Fora desse horário, a gente respende assim que possível!',
+      'Funcionamos em horário comercial: segunda a sexta 8h–18h, sábado 8h–12h. Fora isso, pode deixar sua mensagem que respondemos em seguida.',
+      'Estamos prontos para atender de segunda a sexta, 8h às 18h, e sábado até 12h. Fora desse horário, a equipe responde assim que possível.',
+    ],
+  },
+  {
+    id: 'cat-support',
+    name: 'Suporte Técnico',
+    keywords: ['suporte', 'ajuda', 'socorro', 'problema', 'não funciona', 'nao funciona', 'erro', 'defeito', 'quebrou', 'bug', 'falha', 'travou', 'lento'],
+    responses: [
+      'Entendo, isso deve ser frustrante! Me explica melhor o que está acontecendo que vou tentar te ajudar ou passar pra equipe certa.',
+      'Vamos ver isso juntos! Pode me contar mais detalhes do problema? Quanto mais informações, melhor consigo direcionar.',
+      'Poxa, sinto muito por isso! Me conta exatamente o que apareceu ou o que aconteceu, que já vou ver a melhor forma de resolver.',
+    ],
+  },
+  {
+    id: 'cat-product',
+    name: 'Informações do Produto',
+    keywords: ['produto', 'serviço', 'servico', 'como funciona', 'detalhes', 'quero saber', 'me explica', 'o que é', 'oque é', 'diferença', 'diferenca', 'características', 'caracteristicas', 'benefícios'],
+    responses: [
+      'Claro! Nossas soluções foram pensadas para facilitar o dia a dia. Você tem interesse em algum serviço específico? Posso detalhar para você.',
+      'Boa pergunta! Basicamente, oferecemos [descrição resumida]. Mas me conta mais sobre o que você está buscando, aí posso te dar uma explicação bem direcionada.',
+      'Fico feliz em explicar! Nossos serviços incluem [descrição]. Tem algo mais específico que você gostaria de saber?',
+    ],
+  },
+  {
+    id: 'cat-complaint',
+    name: 'Reclamação',
+    keywords: ['reclamação', 'reclamacao', 'reclamar', 'insatisfeito', 'péssimo', 'pessimo', 'horrível', 'horrivel', 'decepcionado', 'chateado', 'raiva', 'absurdo'],
+    responses: [
+      'Sinto muito por essa experiência! Isso não é o que queremos para nossos clientes. Pode me passar mais detalhes? Vou garantir que chegue ao setor responsável.',
+      'Poxa, lamento muito que isso tenha acontecido. Quero entender melhor para resolver da melhor forma possível. Me conta o que houve?',
+      'Oi, sinto muito! Essa situação não é legal mesmo. Me explica direitinho o que rolou que vou dar o encaminhamento certo.',
+    ],
+  },
+  {
+    id: 'cat-schedule',
+    name: 'Agendamento',
+    keywords: ['agendar', 'marcar', 'agendamento', 'visita', 'consulta', 'horário', 'horario', 'quando', 'pode ser', 'agenda', 'marcar uma', 'agendar uma'],
+    responses: [
+      'Perfeito! Vamos agendar. Qual dia e horário seriam melhores para você? Normalmente temos disponibilidade pela manhã e à tarde.',
+      'Claro! Me diz qual dia e horário você prefere, e também se tem alguma preferência de período (manhã ou tarde), que confirmamos rapidinho.',
+      'Bora marcar! Me passa a melhor data pra você e um horário ideal que eu encaixo na agenda.',
+    ],
+  },
+  {
+    id: 'cat-goodbye',
+    name: 'Despedida',
+    keywords: ['tchau', 'obrigado', 'brigado', 'valeu', 'até', 'ate', 'flw', 'falou', 'abrigado', 'agradecido', 'agradeço', 'obrigada'],
+    responses: [
+      'Imagina! Foi um prazer ajudar. Se precisar de mais algo, é só chamar. Até mais!',
+      'Disponha! Qualquer dúvida que surgir, pode me procurar. Tenha um ótimo dia!',
+      'Por nada! Estou aqui para isso. Se surgir qualquer outra coisa, é só falar. Até logo!',
+    ],
+  },
+  {
+    id: 'cat-fallback',
+    name: 'Fallback (não identificado)',
+    keywords: [],
+    responses: [
+      'Entendi! Me conta um pouco mais para eu entender direitinho e poder te ajudar melhor?',
+      'Obrigado pela mensagem! Pode me dar mais alguns detalhes para eu direcionar da melhor forma?',
+      'Perfeito! Você pode me explicar melhor o que precisa? Assim consigo te ajudar direitinho.',
+    ],
+  },
+];
+
+// Clona os defaults ao iniciar
+let humanizedCategories: HumanizedCategory[] = JSON.parse(JSON.stringify(defaultHumanizedCategories));
+
+function getHumanizedResponse(message: string): string | null {
+  const normalized = message.toLowerCase().trim();
+  
+  // Verifica cada categoria por palavras-chave
+  for (const cat of humanizedCategories) {
+    if (cat.id === 'cat-fallback') continue; // fallback é verificado por último
+    for (const kw of cat.keywords) {
+      if (normalized.includes(kw)) {
+        // Pega uma resposta aleatória da categoria
+        const idx = Math.floor(Math.random() * cat.responses.length);
+        return cat.responses[idx];
+      }
+    }
+  }
+  
+  // Fallback
+  const fallbackCat = humanizedCategories.find(c => c.id === 'cat-fallback');
+  if (fallbackCat && fallbackCat.responses.length > 0) {
+    const idx = Math.floor(Math.random() * fallbackCat.responses.length);
+    return fallbackCat.responses[idx];
+  }
+  
+  return null;
+}
+
+function calculateHumanizedDelay(response: string): number {
+  // 2-4s de reação + 40-70ms por caractere
+  const reactionMs = 2000 + Math.random() * 2000;
+  const typingMs = response.length * (40 + Math.random() * 35);
+  const total = reactionMs + typingMs;
+  
+  // Limita entre os delays configurados
+  return Math.min(Math.max(total, humanizedDelayMin), humanizedDelayMax);
+}
+
 function processNextBulkMessage(deviceId: string) {
   if (bulkTimeout) {
     clearTimeout(bulkTimeout);
@@ -421,31 +565,45 @@ wss.on('connection', (rawWs: RawWs, req: IncomingMessage) => {
           let matched = false;
           let targetResponse = "";
 
-          // Avalia regras de resposta automática do Chatbot
-          for (const rule of autoReplyRules) {
-            const ruleKeyword = rule.keyword.toLowerCase().trim();
-            if (normalizedMsg.includes(ruleKeyword)) {
+          // ─── MODO ATENDIMENTO HUMANIZADO ───
+          if (humanizedEnabled) {
+            const humanizedResponse = getHumanizedResponse(combinedMessage);
+            if (humanizedResponse) {
               matched = true;
-              targetResponse = rule.response;
-              fastify.log.info(`[CHATBOT] Match na regra "${rule.keyword}" para "${combinedMessage}"`);
-              break;
+              targetResponse = humanizedResponse;
+              fastify.log.info(`[HUMANIZADO] Resposta gerada para "${combinedMessage}": "${humanizedResponse}"`);
             }
           }
 
-          // Se não houver correspondência e fallback estiver ativo
-          if (!matched && agentSettings.enableFallback) {
+          // ─── MODO CHATBOT PADRÃO (só executa se humanizado não respondeu) ───
+          if (!matched) {
+            for (const rule of autoReplyRules) {
+              const ruleKeyword = rule.keyword.toLowerCase().trim();
+              if (normalizedMsg.includes(ruleKeyword)) {
+                matched = true;
+                targetResponse = rule.response;
+                fastify.log.info(`[CHATBOT] Match na regra "${rule.keyword}" para "${combinedMessage}"`);
+                break;
+              }
+            }
+          }
+
+          // Fallback geral
+          if (!matched && agentSettings.enableFallback && !humanizedEnabled) {
             targetResponse = agentSettings.fallbackResponse;
             matched = true;
             fastify.log.info(`[CHATBOT] Sem match de regra. Resposta fallback acionada para "${combinedMessage}"`);
           }
 
           if (matched && targetResponse) {
-            const fullResponse = targetResponse + (agentSettings.signature || "");
-            const typingDelay = calculateTypingDelay(fullResponse);
+            const senderLabel = humanizedEnabled ? 'Atendente' : 'Chatbot';
+            const fullResponse = targetResponse + (humanizedEnabled ? '' : (agentSettings.signature || ""));
+            const typingDelay = humanizedEnabled
+              ? calculateHumanizedDelay(fullResponse)
+              : calculateTypingDelay(fullResponse);
             
-            fastify.log.info(`[CHATBOT] Delay de digitação calculado: ${typingDelay}ms`);
+            fastify.log.info(`[${humanizedEnabled ? 'HUMANIZADO' : 'CHATBOT'}] Delay calculado: ${typingDelay}ms`);
 
-            // Informa o painel que o Chatbot começou a digitar
             io.to('panel').emit('whatsapp_typing', { deviceId, app, sender, isTyping: true });
 
             const typingTimeout = setTimeout(() => {
@@ -455,36 +613,32 @@ wss.on('connection', (rawWs: RawWs, req: IncomingMessage) => {
                   payload: { sender, app, message: fullResponse }
                 }));
 
-                const chatbotReply: WhatsAppMessage = {
+                const reply: WhatsAppMessage = {
                   app,
-                  sender: 'Chatbot',
+                  sender: senderLabel,
                   recipient: sender,
                   message: fullResponse,
                   timestamp: Date.now(),
                   isIncoming: false
                 };
-                whatsappMessages.push(chatbotReply);
+                whatsappMessages.push(reply);
                 if (whatsappMessages.length > 500) whatsappMessages.shift();
 
-                // Emite a mensagem enviada de volta para o painel web para atualizar a conversa
                 io.to('panel').emit('whatsapp_sent', {
                   deviceId,
-                  ...chatbotReply
+                  ...reply
                 });
               }
 
-              // Finaliza o status de digitando e limpa a fila pendente
               io.to('panel').emit('whatsapp_typing', { deviceId, app, sender, isTyping: false });
               pendingChatbotReplies.delete(chatbotKey);
             }, typingDelay);
 
-            // Atualiza o objeto pendente com o timer de digitação ativo
             const updatedPending = pendingChatbotReplies.get(chatbotKey);
             if (updatedPending) {
               updatedPending.typingTimeout = typingTimeout;
             }
           } else {
-            // Se nenhuma resposta for gerada, limpa a fila pendente
             pendingChatbotReplies.delete(chatbotKey);
           }
         }, silenceTimeoutMs);
@@ -938,6 +1092,40 @@ io.on('connection', (socket) => {
         }
       } catch (err) {
         fastify.log.error(`Error updating agent settings: ${err}`);
+      }
+    });
+
+    // ─── Atendimento Humanizado ───
+    socket.on('get_humanized_config', () => {
+      socket.emit('humanized_config', {
+        enabled: humanizedEnabled,
+        delayMin: humanizedDelayMin,
+        delayMax: humanizedDelayMax,
+        categories: humanizedCategories,
+      });
+    });
+
+    socket.on('update_humanized_config', (data: {
+      enabled?: boolean;
+      delayMin?: number;
+      delayMax?: number;
+      categories?: HumanizedCategory[];
+    }) => {
+      try {
+        if (data.enabled !== undefined) humanizedEnabled = data.enabled;
+        if (data.delayMin !== undefined) humanizedDelayMin = data.delayMin;
+        if (data.delayMax !== undefined) humanizedDelayMax = data.delayMax;
+        if (data.categories) humanizedCategories = data.categories;
+
+        fastify.log.info(`[HUMANIZADO] Config atualizada. enabled=${humanizedEnabled}`);
+        io.to('panel').emit('humanized_config', {
+          enabled: humanizedEnabled,
+          delayMin: humanizedDelayMin,
+          delayMax: humanizedDelayMax,
+          categories: humanizedCategories,
+        });
+      } catch (err) {
+        fastify.log.error(`Error updating humanized config: ${err}`);
       }
     });
 

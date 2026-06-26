@@ -90,7 +90,7 @@ export default function ControlPanel() {
   const [screenPolling, setScreenPolling] = useState(false);
 
   // WhatsApp & Chatbot integration state
-  const [activeTab, setActiveTab] = useState<"controls" | "whatsapp" | "skills" | "bulk">("controls");
+  const [activeTab, setActiveTab] = useState<"controls" | "whatsapp" | "skills" | "bulk" | "humanizado">("controls");
   const [whatsappMessages, setWhatsappMessages] = useState<any[]>([]);
   const [chatbotRules, setChatbotRules] = useState<any[]>([]);
   const [newRuleKeyword, setNewRuleKeyword] = useState("");
@@ -99,6 +99,34 @@ export default function ControlPanel() {
   const [manualReplyText, setManualReplyText] = useState("");
   const [contacts, setContacts] = useState<any[]>([]);
   const [typingContacts, setTypingContacts] = useState<Record<string, boolean>>({});
+
+  // Atendimento Humanizado States
+  const [humanizedEnabled, setHumanizedEnabled] = useState(false);
+  const [humanizedDelayMin, setHumanizedDelayMin] = useState(3000);
+  const [humanizedDelayMax, setHumanizedDelayMax] = useState(7000);
+  interface HumanizedCategory { id: string; name: string; keywords: string[]; responses: string[]; }
+  const [humanizedCategories, setHumanizedCategories] = useState<HumanizedCategory[]>([]);
+  const [expandedCat, setExpandedCat] = useState<string | null>(null);
+  const [humanizedPrompt, setHumanizedPrompt] = useState(`Você é um assistente de atendimento humanizado via WhatsApp.
+
+Seu objetivo é responder clientes de forma natural, clara, educada e conversacional, como um atendente humano experiente.
+
+REGRAS DE COMPORTAMENTO:
+- Escreva como uma pessoa real, evitando linguagem robótica ou excessivamente formal.
+- Nunca use respostas idênticas repetidas. Sempre varie a estrutura das frases.
+- Adapte o tom ao contexto do cliente (curioso, interessado, com dúvida, indeciso, etc.).
+- Seja direto, mas sem parecer automático ou "scriptado".
+- Use linguagem simples, brasileira, e natural.
+- Se necessário, faça pequenas perguntas para manter a conversa fluindo.
+- Demonstre atenção ao que o cliente disse antes de responder.
+- Não seja agressivo nem insistente.
+- Evite mensagens longas demais; prefira respostas curtas e conversacionais.
+
+ESTILO DE RESPOSTA:
+- Tom amigável, humano e leve.
+- Pode usar expressões naturais como "entendi", "boa", "perfeito", "deixa comigo", "vamos lá".
+- Pode usar emojis com moderação (0 a 2 por mensagem, quando fizer sentido).
+- Evite excesso de emojis ou textos promocionais exagerados.`);
 
   // Bulk Sender States
   const [bulkContactsText, setBulkContactsText] = useState("");
@@ -162,6 +190,7 @@ export default function ControlPanel() {
     socket.emit("get_agent_settings");
     socket.emit("get_contacts");
     socket.emit("get_bulk_status");
+    socket.emit("get_humanized_config");
 
     const handleMessagesList = (data: { messages: any[] }) => {
       setWhatsappMessages(data.messages);
@@ -228,6 +257,15 @@ export default function ControlPanel() {
       setBulkStatus(status);
     };
 
+    const handleHumanizedConfig = (data: { enabled: boolean; delayMin: number; delayMax: number; categories: any[] }) => {
+      setHumanizedEnabled(data.enabled);
+      setHumanizedDelayMin(data.delayMin);
+      setHumanizedDelayMax(data.delayMax);
+      if (data.categories && data.categories.length > 0) {
+        setHumanizedCategories(data.categories);
+      }
+    };
+
     socket.on("whatsapp_messages_list", handleMessagesList);
     socket.on("chatbot_rules_list", handleRulesUpdated);
     socket.on("whatsapp_received", handleMsgReceived);
@@ -238,6 +276,7 @@ export default function ControlPanel() {
     socket.on("contacts_list", handleContactsList);
     socket.on("whatsapp_typing", handleTyping);
     socket.on("bulk_status_update", handleBulkStatusUpdate);
+    socket.on("humanized_config", handleHumanizedConfig);
 
     return () => {
       socket.off("whatsapp_messages_list", handleMessagesList);
@@ -250,6 +289,7 @@ export default function ControlPanel() {
       socket.off("contacts_list", handleContactsList);
       socket.off("whatsapp_typing", handleTyping);
       socket.off("bulk_status_update", handleBulkStatusUpdate);
+      socket.off("humanized_config", handleHumanizedConfig);
     };
   }, [socket, selectedDevice]);
 
@@ -572,6 +612,23 @@ export default function ControlPanel() {
             }}
           >
             💬 WhatsApp
+          </button>
+          <button
+            onClick={() => setActiveTab("humanizado")}
+            style={{
+              flex: 1,
+              padding: "8px 12px",
+              borderRadius: "6px",
+              border: "none",
+              background: activeTab === "humanizado" ? "var(--accent)" : "transparent",
+              color: activeTab === "humanizado" ? "white" : "var(--text-muted)",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "12px",
+              transition: "all 0.15s"
+            }}
+          >
+            🎯 Atendimento
           </button>
           <button
             onClick={() => setActiveTab("skills")}
@@ -1106,6 +1163,375 @@ export default function ControlPanel() {
                 )}
               </div>
             </div>
+          </>
+        )}
+
+        {activeTab === "humanizado" && (
+          <>
+            <div className="humanizado-container">
+              {/* Header */}
+              <section className="glass-card" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: "50%",
+                      background: "linear-gradient(135deg, rgba(16,185,129,0.3), rgba(6,182,212,0.1))",
+                      border: "1.5px solid rgba(16,185,129,0.5)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 16, boxShadow: "0 0 20px rgba(16,185,129,0.15)",
+                    }}>🎯</div>
+                    <div>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", letterSpacing: "0.05em" }}>
+                        Atendimento Humanizado
+                      </span>
+                      <span style={{ fontSize: 10, color: "var(--text-muted)", display: "block", marginTop: 1 }}>
+                        Respostas automáticas com tom natural e humano
+                      </span>
+                    </div>
+                  </div>
+                  <label className="toggle-wrapper" title={humanizedEnabled ? "Desativar" : "Ativar"}>
+                    <input
+                      type="checkbox"
+                      checked={humanizedEnabled}
+                      onChange={(e) => {
+                        setHumanizedEnabled(e.target.checked);
+                        socket?.emit("update_humanized_config", { enabled: e.target.checked });
+                      }}
+                    />
+                    <span className="toggle-slider" />
+                    <span style={{ fontSize: 10, color: humanizedEnabled ? "#10b981" : "var(--text-muted)", fontWeight: 600, marginLeft: 6, minWidth: 50 }}>
+                      {humanizedEnabled ? "ATIVO" : "INATIVO"}
+                    </span>
+                  </label>
+                </div>
+
+                <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontSize: 10, color: "var(--text-muted)" }}>Delay mínimo</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <input
+                        type="range"
+                        min={1000}
+                        max={8000}
+                        step={500}
+                        value={humanizedDelayMin}
+                        onChange={(e) => {
+                          const v = Number(e.target.value);
+                          setHumanizedDelayMin(v);
+                          socket?.emit("update_humanized_config", { delayMin: v });
+                        }}
+                        style={{ width: 80 }}
+                      />
+                      <span style={{ fontSize: 11, color: "var(--text)", minWidth: 35 }}>{(humanizedDelayMin / 1000).toFixed(1)}s</span>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontSize: 10, color: "var(--text-muted)" }}>Delay máximo</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <input
+                        type="range"
+                        min={3000}
+                        max={15000}
+                        step={500}
+                        value={humanizedDelayMax}
+                        onChange={(e) => {
+                          const v = Number(e.target.value);
+                          setHumanizedDelayMax(v);
+                          socket?.emit("update_humanized_config", { delayMax: v });
+                        }}
+                        style={{ width: 80 }}
+                      />
+                      <span style={{ fontSize: 11, color: "var(--text)", minWidth: 35 }}>{(humanizedDelayMax / 1000).toFixed(1)}s</span>
+                    </div>
+                  </div>
+                </div>
+
+                {humanizedEnabled && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "rgba(16,185,129,0.08)", borderRadius: 8, border: "1px solid rgba(16,185,129,0.2)", fontSize: 11, color: "#10b981" }}>
+                    <span>●</span>
+                    <span>Modo Humanizado ativo — todas as mensagens recebidas serão respondidas automaticamente com tom natural e delay humano.</span>
+                  </div>
+                )}
+              </section>
+
+              {/* Categorias de Resposta */}
+              <section className="glass-card" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    🗂️ Categorias de Resposta ({humanizedCategories.length})
+                  </span>
+                  <button
+                    className="ctrl-btn"
+                    style={{ padding: "4px 10px", fontSize: 10 }}
+                    onClick={() => {
+                      const name = prompt("Nome da nova categoria:");
+                      if (!name) return;
+                      const newCat = {
+                        id: `cat-${Date.now()}`,
+                        name,
+                        keywords: [] as string[],
+                        responses: ["[Edite esta resposta]"],
+                      };
+                      const updated = [...humanizedCategories, newCat];
+                      setHumanizedCategories(updated);
+                      socket?.emit("update_humanized_config", { categories: updated });
+                    }}
+                  >
+                    + Nova Categoria
+                  </button>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 400, overflowY: "auto" }}>
+                  {humanizedCategories.map((cat) => (
+                    <div key={cat.id} className="humanizado-cat-card">
+                      <div
+                        className="humanizado-cat-header"
+                        onClick={() => setExpandedCat(expandedCat === cat.id ? null : cat.id)}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{expandedCat === cat.id ? "▾" : "▸"}</span>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{cat.name}</span>
+                          <span style={{ fontSize: 10, color: "var(--text-muted)", opacity: 0.6 }}>
+                            {cat.keywords.length} palavras-chave · {cat.responses.length} respostas
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          <button
+                            className="humanizado-del-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!confirm(`Excluir categoria "${cat.name}"?`)) return;
+                              const updated = humanizedCategories.filter(c => c.id !== cat.id);
+                              setHumanizedCategories(updated);
+                              socket?.emit("update_humanized_config", { categories: updated });
+                            }}
+                            title="Excluir categoria"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+
+                      {expandedCat === cat.id && (
+                        <div className="humanizado-cat-body">
+                          {/* Palavras-chave */}
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            <span style={{ fontSize: 10, color: "var(--text-muted)", letterSpacing: "0.04em" }}>
+                              PALAVRAS-CHAVE
+                            </span>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                              {cat.keywords.map((kw, ki) => (
+                                <span key={ki} className="humanizado-keyword-tag">
+                                  {kw}
+                                  <button
+                                    className="humanizado-keyword-remove"
+                                    onClick={() => {
+                                      const updated = humanizedCategories.map(c =>
+                                        c.id === cat.id ? { ...c, keywords: c.keywords.filter((_, i) => i !== ki) } : c
+                                      );
+                                      setHumanizedCategories(updated);
+                                      socket?.emit("update_humanized_config", { categories: updated });
+                                    }}
+                                  >
+                                    ✕
+                                  </button>
+                                </span>
+                              ))}
+                              <input
+                                className="humanizado-keyword-input"
+                                placeholder="+ palavra"
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
+                                    const val = (e.target as HTMLInputElement).value.trim().toLowerCase();
+                                    const updated = humanizedCategories.map(c =>
+                                      c.id === cat.id ? { ...c, keywords: [...c.keywords, val] } : c
+                                    );
+                                    setHumanizedCategories(updated);
+                                    socket?.emit("update_humanized_config", { categories: updated });
+                                    (e.target as HTMLInputElement).value = "";
+                                  }
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Variações de Resposta */}
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            <span style={{ fontSize: 10, color: "var(--text-muted)", letterSpacing: "0.04em" }}>
+                              VARIAÇÕES DE RESPOSTA ({cat.responses.length})
+                            </span>
+                            {cat.responses.map((resp, ri) => (
+                              <div key={ri} className="humanizado-response-row">
+                                <textarea
+                                  value={resp}
+                                  onChange={(e) => {
+                                    const updated = humanizedCategories.map(c =>
+                                      c.id === cat.id
+                                        ? { ...c, responses: c.responses.map((r, i) => i === ri ? e.target.value : r) }
+                                        : c
+                                    );
+                                    setHumanizedCategories(updated);
+                                  }}
+                                  onBlur={() => socket?.emit("update_humanized_config", { categories: humanizedCategories })}
+                                  className="humanizado-response-textarea"
+                                  rows={2}
+                                />
+                                <button
+                                  className="humanizado-del-btn"
+                                  style={{ alignSelf: "flex-start", marginTop: 4 }}
+                                  onClick={() => {
+                                    const updated = humanizedCategories.map(c =>
+                                      c.id === cat.id ? { ...c, responses: c.responses.filter((_, i) => i !== ri) } : c
+                                    );
+                                    setHumanizedCategories(updated);
+                                    socket?.emit("update_humanized_config", { categories: updated });
+                                  }}
+                                  title="Remover variação"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              className="ctrl-btn"
+                              style={{ padding: "4px 10px", fontSize: 10, alignSelf: "flex-start" }}
+                              onClick={() => {
+                                const updated = humanizedCategories.map(c =>
+                                  c.id === cat.id ? { ...c, responses: [...c.responses, "[Edite esta resposta]"] } : c
+                                );
+                                setHumanizedCategories(updated);
+                                socket?.emit("update_humanized_config", { categories: updated });
+                              }}
+                            >
+                              + Variação
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Skill Prompt */}
+              <section className="glass-card" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  📋 Estilo de Atendimento
+                </span>
+                <textarea
+                  value={humanizedPrompt}
+                  onChange={(e) => setHumanizedPrompt(e.target.value)}
+                  style={{
+                    width: "100%",
+                    background: "var(--surface-2)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 8,
+                    padding: "10px 12px",
+                    color: "var(--text)",
+                    fontSize: 11,
+                    fontFamily: "monospace",
+                    lineHeight: 1.6,
+                    resize: "vertical",
+                    minHeight: 100,
+                    outline: "none",
+                  }}
+                  rows={6}
+                />
+                <span style={{ fontSize: 10, color: "var(--text-muted)", opacity: 0.7 }}>
+                  Este prompt define o estilo de todas as respostas. Edite à vontade para personalizar o tom.
+                </span>
+              </section>
+            </div>
+
+            <style>{`
+              .humanizado-container { display: flex; flex-direction: column; gap: 12; }
+              .humanizado-cat-card {
+                background: rgba(19,19,26,0.6);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                overflow: hidden;
+                transition: border-color 0.2s;
+              }
+              .humanizado-cat-card:hover { border-color: rgba(124,58,237,0.3); }
+              .humanizado-cat-header {
+                display: flex; align-items: center; justify-content: space-between;
+                padding: 10px 12px; cursor: pointer;
+                transition: background 0.15s;
+              }
+              .humanizado-cat-header:hover { background: rgba(124,58,237,0.05); }
+              .humanizado-cat-body { display: flex; flex-direction: column; gap: 10; padding: 4px 12px 12px; }
+              .humanizado-keyword-tag {
+                display: inline-flex; align-items: center; gap: 4px;
+                padding: 2px 8px;
+                background: rgba(124,58,237,0.12);
+                border: 1px solid rgba(124,58,237,0.25);
+                border-radius: 12px;
+                font-size: 10px;
+                color: #a78bfa;
+              }
+              .humanizado-keyword-remove {
+                background: none; border: none; color: #64748b; cursor: pointer;
+                font-size: 9px; padding: 0; line-height: 1;
+              }
+              .humanizado-keyword-remove:hover { color: #ef4444; }
+              .humanizado-keyword-input {
+                background: transparent; border: 1px dashed var(--border);
+                border-radius: 12px; padding: 2px 8px; font-size: 10px;
+                color: var(--text); outline: none; width: 90px;
+              }
+              .humanizado-keyword-input:focus { border-color: rgba(124,58,237,0.5); }
+              .humanizado-response-row {
+                display: flex; align-items: flex-start; gap: 6px;
+              }
+              .humanizado-response-textarea {
+                flex: 1;
+                background: var(--surface-2);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                padding: 6px 8px;
+                color: var(--text);
+                font-size: 11px;
+                line-height: 1.5;
+                resize: vertical;
+                outline: none;
+                font-family: inherit;
+              }
+              .humanizado-response-textarea:focus { border-color: rgba(16,185,129,0.5); }
+              .humanizado-del-btn {
+                background: none; border: none; color: #64748b; cursor: pointer;
+                font-size: 11px; padding: 2px 4px; border-radius: 4px;
+              }
+              .humanizado-del-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+              .toggle-wrapper {
+                display: inline-flex; align-items: center; cursor: pointer; gap: 0;
+              }
+              .toggle-wrapper input { display: none; }
+              .toggle-slider {
+                width: 36px; height: 20px;
+                background: var(--surface-2);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                position: relative;
+                transition: all 0.25s;
+              }
+              .toggle-slider::after {
+                content: "";
+                position: absolute;
+                width: 14px; height: 14px;
+                background: #64748b;
+                border-radius: 50%;
+                top: 2px; left: 2px;
+                transition: all 0.25s;
+              }
+              .toggle-wrapper input:checked + .toggle-slider {
+                background: rgba(16,185,129,0.2);
+                border-color: #10b981;
+              }
+              .toggle-wrapper input:checked + .toggle-slider::after {
+                background: #10b981;
+                left: 18px;
+              }
+            `}</style>
           </>
         )}
 
