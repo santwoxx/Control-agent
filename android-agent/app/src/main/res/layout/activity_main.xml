@@ -16,7 +16,7 @@
             android:background="@drawable/bg_header_gradient"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="40dp 32dp 32dp">
+            android:paddingTop="40dp" android:paddingLeft="32dp" android:paddingRight="32dp" android:paddingBottom="32dp">
 
             <TextView
                 android:layout_width="56dp"

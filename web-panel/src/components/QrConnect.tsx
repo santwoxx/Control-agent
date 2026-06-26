@@ -22,7 +22,7 @@ export default function QrConnect() {
       QRCode.toDataURL(wsUrl, {
         width: 200,
         margin: 2,
-        color: { dark: "#e2e8f0", light: "#0a0a0f" },
+        color: { dark: "#000000", light: "#ffffff" },
       }).then(setQrDataUrl);
     };
     socket.on("server_info", handler);
