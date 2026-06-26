@@ -70,7 +70,11 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       socket.emit("get_devices");
     });
 
-    socket.on("disconnect", () => setIsConnected(false));
+    socket.on("disconnect", () => {
+      setIsConnected(false);
+      setDevices([]);
+      setScreenFrame(null);
+    });
 
     socket.on("device_list", (data: { devices: Device[] }) => {
       setDevices(data.devices);
