@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
@@ -31,7 +32,14 @@ export default function LoginPage() {
         {/* Logo / Brand */}
         <div className="login-brand">
           <div className="login-logo">
-            <span className="login-logo-icon">⚡</span>
+            <Image
+              src="/logo.png"
+              alt="Control Agent Logo"
+              width={64}
+              height={64}
+              style={{ borderRadius: 16, objectFit: "cover" }}
+              priority
+            />
           </div>
           <h1 className="login-title gradient-text">Control Agent</h1>
           <p className="login-subtitle">

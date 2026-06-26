@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Background -->
+  <rect width="100" height="100" rx="20" fill="#0a0a0f"/>
+  <!-- Glow -->
+  <circle cx="50" cy="50" r="38" fill="#7c3aed" opacity="0.15"/>
+  <circle cx="50" cy="50" r="26" fill="#7c3aed" opacity="0.2"/>
+  <!-- Lightning bolt purple body -->
+  <path d="M58 14 L40 52 L53 52 L42 86 L62 46 L50 46 Z" fill="#7c3aed"/>
+  <!-- Lightning bolt cyan highlight -->
+  <path d="M54 14 L40 52 L46 52 L40 68 L58 42 L51 42 Z" fill="#06b6d4"/>
+  <!-- White tip -->
+  <circle cx="56" cy="16" r="3" fill="white" opacity="0.9"/>
+</svg>

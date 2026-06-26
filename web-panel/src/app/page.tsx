@@ -43,10 +43,25 @@ export default function HomePage() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {/* Top Bar */}
           <div className="topbar">
-            <div style={{ flex: 1 }}>
-              <h1 style={{ fontSize: 15, fontWeight: 600 }}>
-                {selectedDevice ? `Controlando: ${selectedDevice}` : "Painel de Controle"}
-              </h1>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 10 }}>
+              {/* Logo */}
+              <Image
+                src="/logo.png"
+                alt="Control Agent"
+                width={30}
+                height={30}
+                style={{ borderRadius: 8, objectFit: "cover" }}
+              />
+              <div>
+                <span className="gradient-text" style={{ fontSize: 13, fontWeight: 800, letterSpacing: "-0.3px" }}>
+                  Control Agent
+                </span>
+                {selectedDevice && (
+                  <span style={{ fontSize: 12, color: "var(--text-muted)", marginLeft: 8 }}>
+                    — {selectedDevice}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
