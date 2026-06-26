@@ -1,0 +1,18 @@
+# render.yaml — Deploy automático do backend no Render
+# Documentação: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: control-agent-backend
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend-server
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+    healthCheckPath: /health

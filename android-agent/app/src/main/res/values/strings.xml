@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Remote Control Agent</string>
+    <string name="accessibility_service_description">
+        Allows the Remote Control system to perform touch gestures, type text,
+        and navigate the device remotely from a desktop panel.
+    </string>
+</resources>

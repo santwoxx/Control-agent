@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Phone shape -->
+    <path
+        android:fillColor="#ffffff"
+        android:pathData="M42,28h24c2.2,0 4,1.8 4,4v44c0,2.2 -1.8,4 -4,4H42c-2.2,0 -4,-1.8 -4,-4V32c0,-2.2 1.8,-4 4,-4zM44,32v36h20V32H44zM52,62c-1.1,0 -2,0.9 -2,2s0.9,2 2,2 2,-0.9 2,-2 -0.9,-2 -2,-2z" />
+    <!-- Signal waves -->
+    <path
+        android:fillColor="#06b6d4"
+        android:pathData="M54,38l-6,8h12z" />
+</vector>

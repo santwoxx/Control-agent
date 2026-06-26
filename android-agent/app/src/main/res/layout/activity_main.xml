@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0a0a0f"
+    android:padding="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📱"
+            android:textSize="56dp"
+            android:layout_marginTop="32dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Remote Control Agent"
+            android:textSize="24dp"
+            android:textColor="#e2e8f0"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="v1.0.0"
+            android:textSize="13dp"
+            android:textColor="#64748b"
+            android:layout_marginTop="4dp" />
+
+        <View
+            android:layout_width="48dp"
+            android:layout_height="2dp"
+            android:background="#7c3aed"
+            android:layout_marginTop="24dp" />
+
+        <!-- Status: Servidor -->
+        <LinearLayout
+            android:id="@+id/statusServer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#13131a"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:layout_marginTop="24dp"
+            android:gravity="center_vertical">
+
+            <View
+                android:id="@+id/dotServer"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:background="#ef4444"
+                android:layout_marginEnd="12dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Servidor"
+                android:textSize="14dp"
+                android:textColor="#e2e8f0" />
+
+            <TextView
+                android:id="@+id/txtServer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Desconectado"
+                android:textSize="12dp"
+                android:textColor="#64748b" />
+
+        </LinearLayout>
+
+        <!-- Status: Acessibilidade -->
+        <LinearLayout
+            android:id="@+id/statusAccessibility"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#13131a"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical">
+
+            <View
+                android:id="@+id/dotAccessibility"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:background="#ef4444"
+                android:layout_marginEnd="12dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Acessibilidade"
+                android:textSize="14dp"
+                android:textColor="#e2e8f0" />
+
+            <TextView
+                android:id="@+id/txtAccessibility"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Desativada"
+                android:textSize="12dp"
+                android:textColor="#64748b" />
+
+        </LinearLayout>
+
+        <!-- Status: Notificações -->
+        <LinearLayout
+            android:id="@+id/statusNotification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#13131a"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical">
+
+            <View
+                android:id="@+id/dotNotification"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:background="#ef4444"
+                android:layout_marginEnd="12dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Acesso Notificações"
+                android:textSize="14dp"
+                android:textColor="#e2e8f0" />
+
+            <TextView
+                android:id="@+id/txtNotification"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Desativado"
+                android:textSize="12dp"
+                android:textColor="#64748b" />
+
+        </LinearLayout>
+
+        <!-- Device Info -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#13131a"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dispositivo"
+                android:textSize="11dp"
+                android:textColor="#64748b"
+                android:textStyle="bold"
+                android:textAllCaps="true" />
+
+            <TextView
+                android:id="@+id/txtDeviceModel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="..."
+                android:textSize="14dp"
+                android:textColor="#e2e8f0"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                android:id="@+id/txtDeviceOS"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12dp"
+                android:textColor="#64748b"
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <!-- Botões -->
+        <Button
+            android:id="@+id/btnAccessibility"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="24dp"
+            android:text="Ativar Acessibilidade"
+            android:textColor="#ffffff"
+            android:background="#7c3aed" />
+
+        <Button
+            android:id="@+id/btnNotification"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:text="Ativar Acesso Notificações"
+            android:textColor="#ffffff"
+            android:background="#7c3aed" />
+
+        <Button
+            android:id="@+id/btnStop"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:text="Parar Serviço"
+            android:textColor="#ef4444"
+            android:background="#1c1c26"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Este app usa o Serviço de Acessibilidade para controlar seu dispositivo remotamente. Mantenha o app rodando em segundo plano."
+            android:textSize="12dp"
+            android:textColor="#64748b"
+            android:layout_marginTop="24dp"
+            android:lineSpacingExtra="4dp"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+</ScrollView>
