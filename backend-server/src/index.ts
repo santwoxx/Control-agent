@@ -452,8 +452,22 @@ function handleBulkCommandResult(deviceId: string, command: string, result: stri
 }
 
 // ─── Raw WebSocket Bridge (for Android OkHttp client) ────────────────────────
-const RAW_WS_PORT = 3002;
-const wss = new WebSocketServer({ port: RAW_WS_PORT });
+// Em ambiente de nuvem (como Render), compartilhamos a mesma porta do Fastify.
+// Anexamos o WebSocketServer ao servidor HTTP do Fastify.
+const wss = new WebSocketServer({ noServer: true });
+
+fastify.ready().then(() => {
+  fastify.server.on('upgrade', (request, socket, head) => {
+    const url = new URL(request.url || '', `http://${request.headers.host}`);
+    // Se for rota do socket.io, deixa o socket.io tratar
+    if (url.pathname.startsWith('/socket.io/')) {
+      return;
+    }
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  });
+});
 
 wss.on('connection', (rawWs: RawWs, req: IncomingMessage) => {
   const url = new URL(req.url || '/', `http://${req.headers.host}`);
@@ -841,6 +855,15 @@ io.on('connection', (socket) => {
     // Panel requests server IP info (for QR Code connection)
     socket.on('get_server_info', () => {
       try {
+        // Se estiver no Render, RENDER_EXTERNAL_URL estará disponível
+        const renderUrl = process.env.RENDER_EXTERNAL_URL;
+        if (renderUrl) {
+          // Converte https://... para wss://...
+          const wsUrl = renderUrl.replace(/^http/, 'ws');
+          socket.emit('server_info', { addresses: [wsUrl], isCloud: true });
+          return;
+        }
+
         const interfaces = os.networkInterfaces();
         const addresses: string[] = [];
         for (const name of Object.keys(interfaces)) {
@@ -853,7 +876,8 @@ io.on('connection', (socket) => {
             }
           }
         }
-        socket.emit('server_info', { addresses, port: RAW_WS_PORT });
+        const port = parseInt(process.env.PORT || '3001', 10);
+        socket.emit('server_info', { addresses, port, isCloud: false });
       } catch (err) {
         fastify.log.error(`[WS] Error in get_server_info: ${err}`);
       }
@@ -1153,11 +1177,11 @@ const start = async () => {
     fastify.log.info(`🚀 Server running at http://0.0.0.0:${port}`);
 
     // Configura o adb reverse para encaminhar conexões do dispositivo via USB automaticamente
-    exec(`"${ADB_PATH}" reverse tcp:3002 tcp:3002`, (err) => {
+    exec(`"${ADB_PATH}" reverse tcp:3002 tcp:${port}`, (err) => {
       if (err) {
         fastify.log.warn(`[ADB] Falha ao configurar adb reverse (USB): ${err.message}`);
       } else {
-        fastify.log.info(`[ADB] Redirecionamento USB configurado com sucesso (adb reverse tcp:3002)`);
+        fastify.log.info(`[ADB] Redirecionamento USB configurado com sucesso (adb reverse tcp:3002 tcp:${port})`);
       }
     });
   } catch (err) {

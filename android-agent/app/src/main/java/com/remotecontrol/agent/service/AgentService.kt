@@ -106,8 +106,10 @@ class AgentService : Service() {
     private var currentUrlIndex = 0
     private fun getServerUrls(): List<String> {
         val stored = Preferences.serverUrl
-        val urls = mutableListOf("ws://127.0.0.1:3002")
-        if (stored.isNotBlank() && stored != "ws://127.0.0.1:3002") {
+        val urls = mutableListOf("ws://127.0.0.1:3002", "wss://control-agent-4wx6.onrender.com")
+        if (stored.isNotBlank() && 
+            stored != "ws://127.0.0.1:3002" && 
+            stored != "wss://control-agent-4wx6.onrender.com") {
             urls.add(stored)
         }
         return urls

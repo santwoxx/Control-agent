@@ -58,7 +58,25 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   }, [selectedDevice]);
 
   useEffect(() => {
-    const socketUrl = process.env.NEXT_PUBLIC_SERVER_URL || (typeof window !== "undefined" ? `${window.location.protocol}//${window.location.hostname}:3001` : "http://localhost:3001");
+    let socketUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+    if (!socketUrl && typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      const isLocal = hostname === "localhost" || 
+                      hostname === "127.0.0.1" || 
+                      hostname.startsWith("192.168.") || 
+                      hostname.startsWith("10.") || 
+                      hostname.startsWith("172.");
+      
+      if (isLocal) {
+        socketUrl = `${window.location.protocol}//${hostname}:3001`;
+      } else {
+        socketUrl = "https://control-agent-4wx6.onrender.com";
+      }
+    }
+    if (!socketUrl) {
+      socketUrl = "http://localhost:3001";
+    }
+
     const socket = io(socketUrl, {
       query: { role: "panel" },
       reconnectionAttempts: Infinity,
