@@ -678,7 +678,7 @@ wss.on('connection', (rawWs: RawWs, req: IncomingMessage) => {
   });
 });
 
-fastify.log.info(`[RAW WS] Bridge listening on port ${RAW_WS_PORT}`);
+fastify.log.info('[RAW WS] Bridge attached to Fastify server');
 
 // ─── REST ROUTES ──────────────────────────────────────────────────────────────
 fastify.get('/', async () => ({ status: 'ok', message: 'Remote Control API v1.0' }));
