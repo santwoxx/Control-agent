@@ -20,6 +20,11 @@ import android.util.Base64
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.Executors
 import android.accessibilityservice.AccessibilityService
+import java.net.NetworkInterface
+import java.net.Inet4Address
+import java.net.InetSocketAddress
+import java.net.Socket
+import kotlinx.coroutines.*
 
 /**
  * AgentService — Foreground Service
@@ -99,17 +104,21 @@ class AgentService : Service() {
     // ─── WebSocket Connection ─────────────────────────────────────────────
 
     private var currentUrlIndex = 0
-    private val serverUrls by lazy {
+    private fun getServerUrls(): List<String> {
         val stored = Preferences.serverUrl
         val urls = mutableListOf("ws://127.0.0.1:3002")
         if (stored.isNotBlank() && stored != "ws://127.0.0.1:3002") {
             urls.add(stored)
         }
-        urls.toList()
+        return urls
     }
 
     private fun connect() {
-        val baseUrl = serverUrls[currentUrlIndex]
+        val urls = getServerUrls()
+        if (currentUrlIndex >= urls.size) {
+            currentUrlIndex = 0
+        }
+        val baseUrl = urls[currentUrlIndex]
         val url = "$baseUrl/?deviceId=${Preferences.deviceId}"
         Log.i(TAG, "Connecting WebSocket to: $url")
         val request = Request.Builder().url(url).build()
@@ -137,8 +146,13 @@ class AgentService : Service() {
                 isConnected = false
                 Log.e(TAG, "WebSocket failure on $baseUrl: ${t.message}")
                 updateNotification("Reconectando...")
+                
+                // Tenta descobrir o servidor na rede local de forma automática
+                triggerAutoDiscovery()
+
                 // Cycle to the next URL for the next connection attempt
-                currentUrlIndex = (currentUrlIndex + 1) % serverUrls.size
+                val currentUrls = getServerUrls()
+                currentUrlIndex = (currentUrlIndex + 1) % currentUrls.size
                 scheduleReconnect()
             }
         })
@@ -147,6 +161,94 @@ class AgentService : Service() {
     private fun scheduleReconnect() {
         reconnectRunnable = Runnable { connect() }.also {
             handler.postDelayed(it, 5000) // Retry every 5s
+        }
+    }
+
+    private fun reconnectImmediately() {
+        reconnectRunnable?.let { handler.removeCallbacks(it) }
+        webSocket?.close(1000, "Reconnecting to newly discovered server")
+        currentUrlIndex = 1 // Prioriza o IP recém-descoberto (índice 1 na lista)
+        connect()
+    }
+
+    @Volatile
+    private var isScanning = false
+
+    private fun getLocalIpAddress(): String? {
+        try {
+            val interfaces = NetworkInterface.getNetworkInterfaces()
+            while (interfaces.hasMoreElements()) {
+                val iface = interfaces.nextElement()
+                if (iface.isLoopback || !iface.isUp) continue
+                val addresses = iface.inetAddresses
+                while (addresses.hasMoreElements()) {
+                    val addr = addresses.nextElement()
+                    if (addr is Inet4Address && !addr.isLoopbackAddress) {
+                        return addr.hostAddress
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting local IP: ${e.message}")
+        }
+        return null
+    }
+
+    private fun triggerAutoDiscovery() {
+        if (isScanning) return
+        isScanning = true
+        Log.i(TAG, "Starting local network auto-discovery...")
+
+        val ip = getLocalIpAddress() ?: run {
+            isScanning = false
+            return
+        }
+        val lastDot = ip.lastIndexOf('.')
+        if (lastDot == -1) {
+            isScanning = false
+            return
+        }
+        val subnet = ip.substring(0, lastDot + 1)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val jobs = mutableListOf<Job>()
+            var foundUrl: String? = null
+
+            for (i in 1..254) {
+                val targetIp = "$subnet$i"
+                if (targetIp == ip) continue
+
+                val job = launch {
+                    try {
+                        val socket = Socket()
+                        socket.connect(InetSocketAddress(targetIp, 3002), 400) // 400ms timeout
+                        socket.close()
+
+                        // Porta 3002 aberta encontrada!
+                        foundUrl = "ws://$targetIp:3002"
+                        Log.i(TAG, "Auto-discovery: Found potential server at $foundUrl")
+                        
+                        // Cancela as outras buscas
+                        coroutineContext.cancelChildren()
+                    } catch (e: Exception) {
+                        // Ignora falhas de conexão
+                    }
+                }
+                jobs.add(job)
+            }
+
+            jobs.joinAll()
+            isScanning = false
+
+            foundUrl?.let { url ->
+                withContext(Dispatchers.Main) {
+                    if (Preferences.serverUrl != url) {
+                        Log.i(TAG, "Auto-discovery: Updating server URL to $url")
+                        Preferences.serverUrl = url
+                        reconnectImmediately()
+                    }
+                }
+            }
         }
     }
 

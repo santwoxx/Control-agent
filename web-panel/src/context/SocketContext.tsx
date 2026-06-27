@@ -58,7 +58,8 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   }, [selectedDevice]);
 
   useEffect(() => {
-    const socket = io(SERVER_URL, {
+    const socketUrl = process.env.NEXT_PUBLIC_SERVER_URL || (typeof window !== "undefined" ? `${window.location.protocol}//${window.location.hostname}:3001` : "http://localhost:3001");
+    const socket = io(socketUrl, {
       query: { role: "panel" },
       reconnectionAttempts: Infinity,
       reconnectionDelay: 2000,

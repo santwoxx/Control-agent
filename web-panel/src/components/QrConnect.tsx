@@ -6,28 +6,84 @@ import QRCode from "qrcode";
 
 export default function QrConnect() {
   const { socket, isConnected } = useSocket();
-  const [serverIp, setServerIp] = useState<string>("");
+  const [addresses, setAddresses] = useState<string[]>([]);
+  const [selectedIp, setSelectedIp] = useState<string>("");
+  const [port, setPort] = useState<number>(3002);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [expanded, setExpanded] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!socket || !isConnected) return;
 
     socket.emit("get_server_info");
     const handler = (data: { addresses: string[]; port: number }) => {
-      const ip = data.addresses[0] || "127.0.0.1";
-      setServerIp(ip);
-      const wsUrl = `ws://${ip}:${data.port}`;
-      QRCode.toDataURL(wsUrl, {
-        width: 200,
-        margin: 2,
-        color: { dark: "#000000", light: "#ffffff" },
-      }).then(setQrDataUrl);
+      setPort(data.port);
+      setAddresses(data.addresses);
+      
+      // Escolher o melhor IP inicial
+      let bestIp = "127.0.0.1";
+      if (data.addresses.length > 0) {
+        bestIp = data.addresses[0];
+        
+        if (typeof window !== "undefined") {
+          const hostname = window.location.hostname;
+          
+          // 1. Se o hostname atual está na lista de IPs do servidor, usa ele
+          if (data.addresses.includes(hostname)) {
+            bestIp = hostname;
+          } else {
+            // 2. Se o hostname é um IP, tenta achar um na mesma subrede (ex: 192.168.1.X)
+            const hostnameParts = hostname.split('.');
+            if (hostnameParts.length === 4) {
+              const subnetIp = data.addresses.find(addr => {
+                const addrParts = addr.split('.');
+                return addrParts.length === 4 && 
+                       addrParts[0] === hostnameParts[0] && 
+                       addrParts[1] === hostnameParts[1];
+              });
+              if (subnetIp) {
+                bestIp = subnetIp;
+              }
+            }
+          }
+        }
+        
+        // 3. Se ainda for o primeiro IP, mas ele parecer um IP virtual comum, e houver outros, tenta priorizar um IP físico real (ex: 192.168.0.x ou 192.168.1.x)
+        if (bestIp === data.addresses[0] && data.addresses.length > 1) {
+          const isVirtual = (ip: string) => 
+            ip.startsWith("192.168.56.") || // VirtualBox
+            ip.startsWith("192.168.99.") || // Docker
+            ip.startsWith("169.254.") ||    // Link-local
+            ip.startsWith("172.17.") ||     // Docker default
+            ip.startsWith("172.18.");       // WSL/Docker
+          
+          if (isVirtual(bestIp)) {
+            const physicalIp = data.addresses.find(ip => !isVirtual(ip));
+            if (physicalIp) {
+              bestIp = physicalIp;
+            }
+          }
+        }
+      }
+      
+      setSelectedIp(bestIp);
     };
+    
     socket.on("server_info", handler);
     return () => { socket.off("server_info", handler); };
   }, [socket, isConnected]);
+
+  useEffect(() => {
+    if (!selectedIp) return;
+    const wsUrl = `ws://${selectedIp}:${port}`;
+    QRCode.toDataURL(wsUrl, {
+      width: 200,
+      margin: 2,
+      color: { dark: "#000000", light: "#ffffff" },
+    })
+      .then(setQrDataUrl)
+      .catch(err => console.error("Erro ao gerar QR Code:", err));
+  }, [selectedIp, port]);
 
   return (
     <div style={{ borderTop: "1px solid var(--border)" }}>
@@ -76,6 +132,35 @@ export default function QrConnect() {
                   display: "block",
                 }}
               />
+              
+              {addresses.length > 1 && (
+                <div style={{ marginTop: 10, textAlign: "left" }}>
+                  <label style={{ fontSize: 10, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>
+                    Selecione o IP do seu WiFi:
+                  </label>
+                  <select
+                    value={selectedIp}
+                    onChange={(e) => setSelectedIp(e.target.value)}
+                    style={{
+                      background: "var(--surface-2)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 6,
+                      color: "var(--text)",
+                      fontSize: 11,
+                      padding: "4px 8px",
+                      width: "100%",
+                      outline: "none",
+                    }}
+                  >
+                    {addresses.map((addr) => (
+                      <option key={addr} value={addr}>
+                        {addr}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div style={{
                 marginTop: 10,
                 background: "var(--surface-2)",
@@ -86,7 +171,7 @@ export default function QrConnect() {
                 fontFamily: "monospace",
                 wordBreak: "break-all",
               }}>
-                ws://{serverIp}:3002
+                ws://{selectedIp}:{port}
               </div>
               <p style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 8, lineHeight: 1.3 }}>
                 Certifique-se de que o celular está na mesma rede WiFi
