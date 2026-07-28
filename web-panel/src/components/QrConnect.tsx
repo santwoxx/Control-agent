@@ -129,6 +129,28 @@ export default function QrConnect() {
           <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12, lineHeight: 1.4 }}>
             Escaneie o QR Code com o app Android para conectar automaticamente
           </p>
+          
+          <a
+            href="/app-release.apk"
+            download="Control-agent-v1.0.0.apk"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              background: "var(--accent)",
+              color: "#fff",
+              textDecoration: "none",
+              padding: "8px 12px",
+              borderRadius: 8,
+              fontSize: 12,
+              fontWeight: 600,
+              marginBottom: 16,
+              transition: "all 0.2s"
+            }}
+          >
+            ⬇️ Baixar App (APK)
+          </a>
 
           {qrDataUrl ? (
             <>
