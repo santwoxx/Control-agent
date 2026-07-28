@@ -1,0 +1,33 @@
+# Node.js
+node_modules/
+dist/
+.next/
+*.log
+
+# Env
+.env
+.env.local
+.env.production
+
+# Android build
+android-agent/.gradle/
+android-agent/build/
+android-agent/app/build/
+android-agent/local.properties
+*.keystore
+*.jks
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Prisma
+backend-server/prisma/*.db

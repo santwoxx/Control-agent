@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Control Agent</string>
+    <string name="accessibility_service_description">
+        Permite ao Control Agent realizar gestos, digitar texto e navegar
+        pelo dispositivo remotamente a partir do painel web.
+    </string>
+</resources>

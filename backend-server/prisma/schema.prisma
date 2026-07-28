@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  devices   Device[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Device {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  name          String
+  model         String?
+  androidOS     String?
+  manufacturer  String?
+  batteryLevel  Int?
+  isOnline      Boolean  @default(false)
+  lastSeen      DateTime @default(now())
+  socketId      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
