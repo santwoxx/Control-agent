@@ -440,56 +440,64 @@ class AgentService : Service() {
 
                     try {
                         val notificationService = NotificationService.instance
+                        var success = false
                         if (notificationService != null) {
-                            val success = notificationService.replyToNotification(sender, app, replyText)
-                            if (success) {
-                                sendCommandResult("SEND_BACKGROUND_REPLY", "success")
-                            } else {
-                                // Fallback por Acessibilidade e Agenda de Contatos!
-                                if (app == "WhatsApp" || app == "WhatsApp Business" || app == null) {
-                                    Log.i(TAG, "Notificação ativa não encontrada. Tentando fallback via Acessibilidade...")
-                                     
-                                    val accessibility = RemoteAccessibilityService.instance
-                                    if (accessibility == null) {
-                                        Log.w(TAG, "Serviço de Acessibilidade não está ativo. Impossível realizar fallback.")
-                                        sendCommandResult("SEND_BACKGROUND_REPLY", "failed_accessibility_not_running")
-                                        return
-                                    }
+                            success = notificationService.replyToNotification(sender, app, replyText)
+                        }
 
-                                    // 1. Tenta obter o número do telefone
-                                    var phoneNumber: String? = null
-                                    if (isPhoneNumber(sender)) {
-                                        phoneNumber = sender
+                        if (success) {
+                            sendCommandResult("SEND_BACKGROUND_REPLY", "success")
+                        } else {
+                            // Fallback por Acessibilidade e Agenda de Contatos!
+                            if (app == "WhatsApp" || app == "WhatsApp Business" || app == null) {
+                                Log.i(TAG, "Notificação ativa não encontrada ou serviço não rodando. Tentando fallback via Acessibilidade...")
+                                 
+                                val accessibility = RemoteAccessibilityService.instance
+                                if (accessibility == null) {
+                                    Log.w(TAG, "Serviço de Acessibilidade não está ativo. Impossível realizar fallback.")
+                                    if (notificationService == null) {
+                                        sendCommandResult("SEND_BACKGROUND_REPLY", "notification_and_accessibility_not_running")
                                     } else {
-                                        phoneNumber = getPhoneNumberByName(sender)
+                                        sendCommandResult("SEND_BACKGROUND_REPLY", "failed_accessibility_not_running")
                                     }
+                                    return
+                                }
+
+                                // 1. Tenta obter o número do telefone
+                                var phoneNumber: String? = null
+                                if (isPhoneNumber(sender)) {
+                                    phoneNumber = sender
+                                } else {
+                                    phoneNumber = getPhoneNumberByName(sender)
+                                }
+                                 
+                                if (phoneNumber != null) {
+                                    val formatted = cleanPhoneNumber(phoneNumber)
+                                    Log.i(TAG, "Número encontrado para $sender: $formatted. Disparando automação...")
                                      
-                                    if (phoneNumber != null) {
-                                        val formatted = cleanPhoneNumber(phoneNumber)
-                                        Log.i(TAG, "Número encontrado para $sender: $formatted. Disparando automação...")
-                                         
-                                        // 2. Define o estado pendente na Acessibilidade
-                                        RemoteAccessibilityService.pendingReplyNumber = formatted
-                                        RemoteAccessibilityService.pendingReplyText = replyText
-                                         
-                                        // 3. Dispara a intent do WhatsApp
-                                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                                            data = android.net.Uri.parse("whatsapp://send?phone=$formatted")
-                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                        }
-                                        startActivity(intent)
-                                         
-                                        sendCommandResult("SEND_BACKGROUND_REPLY", "success_accessibility_fallback")
-                                    } else {
-                                        Log.w(TAG, "Não foi possível obter o número do telefone para $sender")
-                                        sendCommandResult("SEND_BACKGROUND_REPLY", "failed_no_active_notification_or_number")
+                                    // 2. Define o estado pendente na Acessibilidade
+                                    RemoteAccessibilityService.pendingReplyNumber = formatted
+                                    RemoteAccessibilityService.pendingReplyText = replyText
+                                     
+                                    // 3. Dispara a intent do WhatsApp
+                                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                                        data = android.net.Uri.parse("whatsapp://send?phone=$formatted")
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                     }
+                                    startActivity(intent)
+                                     
+                                    sendCommandResult("SEND_BACKGROUND_REPLY", "success_accessibility_fallback")
+                                } else {
+                                    Log.w(TAG, "Não foi possível obter o número do telefone para $sender")
+                                    sendCommandResult("SEND_BACKGROUND_REPLY", "failed_no_active_notification_or_number")
+                                }
+                            } else {
+                                if (notificationService == null) {
+                                    sendCommandResult("SEND_BACKGROUND_REPLY", "notification_service_not_running")
                                 } else {
                                     sendCommandResult("SEND_BACKGROUND_REPLY", "failed_no_active_notification")
                                 }
                             }
-                        } else {
-                            sendCommandResult("SEND_BACKGROUND_REPLY", "notification_service_not_running")
                         }
                     } catch (e: java.lang.Exception) {
                         Log.e(TAG, "Error executing SEND_BACKGROUND_REPLY: ${e.message}")
