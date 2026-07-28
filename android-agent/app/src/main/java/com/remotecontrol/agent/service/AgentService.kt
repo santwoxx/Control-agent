@@ -481,7 +481,8 @@ class AgentService : Service() {
                                      
                                     // 3. Dispara a intent do WhatsApp
                                     val intent = Intent(Intent.ACTION_VIEW).apply {
-                                        data = android.net.Uri.parse("whatsapp://send?phone=$formatted")
+                                        val encodedText = android.net.Uri.encode(replyText)
+                                        data = android.net.Uri.parse("whatsapp://send?phone=$formatted&text=$encodedText")
                                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                     }
                                     startActivity(intent)

@@ -58,60 +58,44 @@ class RemoteAccessibilityService : AccessibilityService() {
         }
     }
 
+    private var isTryingToSend = false
+
     private fun checkAndExecutePendingReply() {
-        val replyText = pendingReplyText ?: return
-        val rootNode = rootInActiveWindow ?: return
+        if (isTryingToSend) return
+        isTryingToSend = true
 
-        // 1. Tenta encontrar a caixa de texto (input de mensagem) do WhatsApp ou WhatsApp Business
-        val inputs = rootNode.findAccessibilityNodeInfosByViewId("com.whatsapp:id/entry")
-        val businessInputs = rootNode.findAccessibilityNodeInfosByViewId("com.whatsapp.w4b:id/entry")
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        var attempts = 0
+        val maxAttempts = 10
         
-        val activeInput = when {
-            inputs != null && inputs.isNotEmpty() -> inputs[0]
-            businessInputs != null && businessInputs.isNotEmpty() -> businessInputs[0]
-            else -> null
-        }
-
-        if (activeInput != null) {
-            // Garante foco na caixa de texto
-            if (!activeInput.isFocused) {
-                activeInput.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_FOCUS)
-            }
-            
-            // Digita o texto
-            val args = Bundle().apply {
-                putCharSequence(
-                    android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
-                    replyText
-                )
-            }
-            val textTyped = activeInput.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_SET_TEXT, args)
-            
-            if (textTyped) {
-                Log.i(TAG, "Sucesso ao digitar o texto pendente")
-                
-                // Aguarda um pequeno delay e clica em enviar
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    val clicked = clickWhatsAppSendButton()
-                    if (clicked) {
-                        Log.i(TAG, "Mensagem enviada com sucesso via acessibilidade!")
-                        // Limpa os estados pendentes
+        val tryClickRunnable = object : Runnable {
+            override fun run() {
+                val clicked = clickWhatsAppSendButton()
+                if (clicked) {
+                    Log.i(TAG, "Mensagem enviada com sucesso via acessibilidade!")
+                    pendingReplyText = null
+                    pendingReplyNumber = null
+                    isTryingToSend = false
+                    
+                    if (shouldCloseAppAfterReply) {
+                        handler.postDelayed({ pressBack() }, 1000)
+                        handler.postDelayed({ pressBack() }, 1800)
+                    }
+                } else {
+                    attempts++
+                    if (attempts < maxAttempts) {
+                        handler.postDelayed(this, 500)
+                    } else {
+                        Log.w(TAG, "Falha: Botão de enviar não encontrado após várias tentativas")
+                        isTryingToSend = false
                         pendingReplyText = null
                         pendingReplyNumber = null
-                        
-                        // Retorna para a tela anterior (fecha o WhatsApp) se necessário
-                        if (shouldCloseAppAfterReply) {
-                            pressBack()
-                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                pressBack()
-                            }, 500)
-                        }
                     }
-                }, 150)
-            } else {
-                Log.w(TAG, "Falhou ao digitar o texto na caixa do WhatsApp")
+                }
             }
         }
+        
+        handler.postDelayed(tryClickRunnable, 500)
     }
 
     private var lastScanTime = 0L
